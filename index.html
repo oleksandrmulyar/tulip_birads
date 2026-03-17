@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="uk">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>BI-RADS MRI Constructor</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <main class="container">
+      <h1>BI-RADS MRI — конструктор протоколу</h1>
+      <p class="subtitle">
+        Для кожної залози окремо: власні утвори, власні опитувальники та автоматичний сумарний BI-RADS (максимальний серед утворів).
+      </p>
+
+      <section class="maps-grid" aria-label="Секторні мапи">
+        <article class="breast-card">
+          <h2>Right breast</h2>
+          <div class="maps-pair">
+            <svg id="map-right" class="breast-map" viewBox="0 0 300 300" role="img" aria-label="Right breast coronal map"></svg>
+            <svg id="sag-right" class="sag-map" viewBox="0 0 220 260" role="img" aria-label="Right breast sagittal map">
+              <path d="M35 25 C60 80,130 95,145 145 C154 173,146 205,122 225 C95 248,58 247,30 234" />
+              <circle cx="142" cy="147" r="6" />
+              <g class="markers" id="sag-markers-right"></g>
+            </svg>
+          </div>
+          <div class="actions">
+            <button type="button" id="add-right">+ Додати утвір (Right)</button>
+            <span id="count-right">0 / 20</span>
+          </div>
+          <div id="lesions-right" class="lesions-list"></div>
+
+          <section class="template-grid side-template" aria-label="Right breast questionnaire">
+            <h3>Right breast — опитувальник</h3>
+            <div class="field"><label for="right-tissue-structure">Будова залозистої тканини</label><select id="right-tissue-structure"></select></div>
+            <div class="field"><label for="right-bitype">Тип тканини (BI-RADS)</label><select id="right-bitype"></select></div>
+            <div class="field"><label for="right-bpe">Фонове контрастування (BPE)</label><select id="right-bpe"></select></div>
+            <div class="field"><label for="right-parenchyma">Паренхіма</label><select id="right-parenchyma"></select></div>
+            <div class="field"><label for="right-ducts">Протоки</label><select id="right-ducts"></select></div>
+            <div class="field"><label for="right-skin">Шкіра і підшкірна клітковина</label><select id="right-skin"></select></div>
+            <div class="field"><label for="right-nodes">Пахвові лімфатичні вузли</label><select id="right-nodes"></select></div>
+            <div class="field"><label for="right-muscles">Грудні м'язи</label><select id="right-muscles"></select></div>
+            <div class="field"><label>Сумарний BI-RADS (Right)</label><output id="right-summary">BI-RADS 1 — без утворів</output></div>
+          </section>
+        </article>
+
+        <article class="breast-card">
+          <h2>Left breast</h2>
+          <div class="maps-pair">
+            <svg id="map-left" class="breast-map" viewBox="0 0 300 300" role="img" aria-label="Left breast coronal map"></svg>
+            <svg id="sag-left" class="sag-map mirrored" viewBox="0 0 220 260" role="img" aria-label="Left breast sagittal map">
+              <path d="M35 25 C60 80,130 95,145 145 C154 173,146 205,122 225 C95 248,58 247,30 234" />
+              <circle cx="142" cy="147" r="6" />
+              <g class="markers" id="sag-markers-left"></g>
+            </svg>
+          </div>
+          <div class="actions">
+            <button type="button" id="add-left">+ Додати утвір (Left)</button>
+            <span id="count-left">0 / 20</span>
+          </div>
+          <div id="lesions-left" class="lesions-list"></div>
+
+          <section class="template-grid side-template" aria-label="Left breast questionnaire">
+            <h3>Left breast — опитувальник</h3>
+            <div class="field"><label for="left-tissue-structure">Будова залозистої тканини</label><select id="left-tissue-structure"></select></div>
+            <div class="field"><label for="left-bitype">Тип тканини (BI-RADS)</label><select id="left-bitype"></select></div>
+            <div class="field"><label for="left-bpe">Фонове контрастування (BPE)</label><select id="left-bpe"></select></div>
+            <div class="field"><label for="left-parenchyma">Паренхіма</label><select id="left-parenchyma"></select></div>
+            <div class="field"><label for="left-ducts">Протоки</label><select id="left-ducts"></select></div>
+            <div class="field"><label for="left-skin">Шкіра і підшкірна клітковина</label><select id="left-skin"></select></div>
+            <div class="field"><label for="left-nodes">Пахвові лімфатичні вузли</label><select id="left-nodes"></select></div>
+            <div class="field"><label for="left-muscles">Грудні м'язи</label><select id="left-muscles"></select></div>
+            <div class="field"><label>Сумарний BI-RADS (Left)</label><output id="left-summary">BI-RADS 1 — без утворів</output></div>
+          </section>
+        </article>
+      </section>
+
+      <section class="report-panel">
+        <div class="report-header">
+          <h3>Згенерований текст протоколу</h3>
+          <button id="copy-report" type="button">Скопіювати</button>
+        </div>
+        <textarea id="report-output" rows="20" readonly></textarea>
+      </section>
+    </main>
+
+    <script src="script.js"></script>
+  </body>
+</html>
