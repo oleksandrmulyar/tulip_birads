@@ -3,8 +3,17 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+    <meta http-equiv="Pragma" content="no-cache" />
+    <meta http-equiv="Expires" content="0" />
+    <style id="cache-safe-layout">
+      /* fallback if stale cached CSS accidentally hides cards/questionnaires */
+      .maps-grid { display: grid !important; }
+      .breast-card { display: block !important; }
+      .template-grid { display: grid !important; }
+    </style>
     <title>BI-RADS MRI Constructor</title>
-    <link rel="stylesheet" href="styles.css" />
+    <link rel="stylesheet" href="styles.css?v=20260317b" />
   </head>
   <body>
     <main class="container">
@@ -38,7 +47,16 @@
             <div class="field"><label for="right-parenchyma">Паренхіма</label><select id="right-parenchyma"></select></div>
             <div class="field"><label for="right-ducts">Протоки</label><select id="right-ducts"></select></div>
             <div class="field"><label for="right-skin">Шкіра і підшкірна клітковина</label><select id="right-skin"></select></div>
-            <div class="field"><label for="right-nodes">Пахвові лімфатичні вузли</label><select id="right-nodes"></select></div>
+            <div class="field nodes-fieldset">
+              <label for="right-nodes-status">Пахвові лімфатичні вузли</label>
+              <select id="right-nodes-status"></select>
+              <label for="right-nodes-size">Розмір лімфовузлів (обов'язково)</label>
+              <select id="right-nodes-size"></select>
+              <label for="right-node-rads" data-node-extra="right">NODE-RADS</label>
+              <select id="right-node-rads" data-node-extra="right"></select>
+              <label for="right-nodes-count" data-node-extra="right">Кількість патологічних лімфовузлів</label>
+              <input id="right-nodes-count" data-node-extra="right" type="number" min="1" value="1" />
+            </div>
             <div class="field"><label for="right-muscles">Грудні м'язи</label><select id="right-muscles"></select></div>
             <div class="field"><label>Сумарний BI-RADS (Right)</label><output id="right-summary">BI-RADS 1 — без утворів</output></div>
           </section>
@@ -68,7 +86,16 @@
             <div class="field"><label for="left-parenchyma">Паренхіма</label><select id="left-parenchyma"></select></div>
             <div class="field"><label for="left-ducts">Протоки</label><select id="left-ducts"></select></div>
             <div class="field"><label for="left-skin">Шкіра і підшкірна клітковина</label><select id="left-skin"></select></div>
-            <div class="field"><label for="left-nodes">Пахвові лімфатичні вузли</label><select id="left-nodes"></select></div>
+            <div class="field nodes-fieldset">
+              <label for="left-nodes-status">Пахвові лімфатичні вузли</label>
+              <select id="left-nodes-status"></select>
+              <label for="left-nodes-size">Розмір лімфовузлів (обов'язково)</label>
+              <select id="left-nodes-size"></select>
+              <label for="left-node-rads" data-node-extra="left">NODE-RADS</label>
+              <select id="left-node-rads" data-node-extra="left"></select>
+              <label for="left-nodes-count" data-node-extra="left">Кількість патологічних лімфовузлів</label>
+              <input id="left-nodes-count" data-node-extra="left" type="number" min="1" value="1" />
+            </div>
             <div class="field"><label for="left-muscles">Грудні м'язи</label><select id="left-muscles"></select></div>
             <div class="field"><label>Сумарний BI-RADS (Left)</label><output id="left-summary">BI-RADS 1 — без утворів</output></div>
           </section>
@@ -84,6 +111,6 @@
       </section>
     </main>
 
-    <script src="script.js"></script>
+    <script src="script.js?v=20260317b"></script>
   </body>
 </html>

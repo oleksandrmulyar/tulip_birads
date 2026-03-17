@@ -235,6 +235,16 @@ textarea {
   gap: 0.3rem;
 }
 
+
+.custom-input {
+  display: none;
+  margin-top: 0.35rem;
+}
+
+.nodes-fieldset {
+  grid-column: span 2;
+}
+
 .report-panel {
   margin-top: 1rem;
 }
