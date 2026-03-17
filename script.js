@@ -3,10 +3,11 @@ const CENTER = 150;
 const OUTER_R = 120;
 const INNER_R = 40;
 const NIPPLE_R = 15;
+const OTHER_VALUE = "__other__";
 const SIDES = ["right", "left"];
 const SIDE_LABEL = { right: "Right", left: "Left" };
 
-const FIELD_KEYS = ["tissue-structure", "bitype", "bpe", "parenchyma", "ducts", "skin", "nodes", "muscles"];
+const FIELD_KEYS = ["tissue-structure", "bitype", "bpe", "parenchyma", "ducts", "skin", "nodes-status", "nodes-size", "node-rads", "muscles"];
 
 const BIRADS_OPTIONS = [
   { score: 1, label: "BI-RADS 1 — патології не виявлено" },
@@ -53,13 +54,9 @@ const OPTIONS = {
     "потовщення та підсилення шкіри",
     "ознаки інфільтрації підшкірної клітковини",
   ],
-  nodes: [
-    "не збільшені, збережена структура",
-    "до 10 мм, збережена кортико-медулярна диференціація",
-    "збільшені, потовщення кортикального шару",
-    "без жирового синуса",
-    "з патологічним накопиченням контрасту",
-  ],
+  "nodes-status": ["не змінені", "патологічно змінені"],
+  "nodes-size": ["до 5 мм", "6-10 мм", "11-15 мм", ">15 мм"],
+  "node-rads": ["1", "2", "3", "4", "5"],
   muscles: ["без особливостей", "без ознак інфільтрації", "з ознаками інвазії"],
   lesionKind: ["focus", "mass", "non-mass enhancement"],
   massShape: ["округла", "овальна", "неправильна"],
@@ -92,15 +89,81 @@ function initTemplateSelects() {
   for (const side of SIDES) {
     for (const key of FIELD_KEYS) {
       const select = document.getElementById(`${side}-${key}`);
-      for (const value of OPTIONS[key]) {
-        const opt = document.createElement("option");
-        opt.value = value;
-        opt.textContent = value;
-        select.appendChild(opt);
-      }
-      select.addEventListener("change", renderReport);
+      if (!select) continue;
+      fillSelect(select, OPTIONS[key], true);
+      const customInput = createCustomInput(`${side}-${key}-custom`);
+      select.insertAdjacentElement("afterend", customInput);
+      syncSelectOther(select, customInput, OPTIONS[key], select.value);
+
+      select.addEventListener("change", () => {
+        syncSelectOther(select, customInput, OPTIONS[key], select.value);
+        if (key === "nodes-status") updateNodesPathologyFields(side);
+        renderReport();
+      });
+      customInput.addEventListener("input", renderReport);
     }
+
+    const nodeCount = document.getElementById(`${side}-nodes-count`);
+    nodeCount.addEventListener("input", renderReport);
+    updateNodesPathologyFields(side);
   }
+}
+
+function fillSelect(select, list, includeOther = false) {
+  select.innerHTML = "";
+  for (const value of list) {
+    const opt = document.createElement("option");
+    opt.value = value;
+    opt.textContent = value;
+    select.appendChild(opt);
+  }
+  if (includeOther) {
+    const other = document.createElement("option");
+    other.value = OTHER_VALUE;
+    other.textContent = "Інше (власноруч)";
+    select.appendChild(other);
+  }
+}
+
+function createCustomInput(id) {
+  const input = document.createElement("input");
+  input.id = id;
+  input.type = "text";
+  input.placeholder = "Вкажіть власний варіант";
+  input.className = "custom-input";
+  return input;
+}
+
+function syncSelectOther(select, customInput, list, value) {
+  const inList = list.includes(value);
+  if (inList) {
+    select.value = value;
+    customInput.value = "";
+    customInput.style.display = "none";
+    return;
+  }
+  if (value === OTHER_VALUE) {
+    select.value = OTHER_VALUE;
+    customInput.style.display = "block";
+    return;
+  }
+  select.value = OTHER_VALUE;
+  customInput.value = value;
+  customInput.style.display = "block";
+}
+
+function getFieldValue(side, key) {
+  const select = document.getElementById(`${side}-${key}`);
+  const custom = document.getElementById(`${side}-${key}-custom`);
+  if (select.value === OTHER_VALUE) return custom.value.trim() || "інше";
+  return select.value;
+}
+
+function updateNodesPathologyFields(side) {
+  const pathological = getFieldValue(side, "nodes-status") === "патологічно змінені";
+  document.querySelectorAll(`[data-node-extra="${side}"]`).forEach((el) => {
+    el.style.display = pathological ? "block" : "none";
+  });
 }
 
 function initLesionControls() {
@@ -169,9 +232,10 @@ function renderAll() {
   renderReport();
 }
 
-function optionsHtml(list, valueMode = false) {
-  if (valueMode) return list.map((x) => `<option value="${x.score}">${x.label}</option>`).join("");
-  return list.map((x) => `<option>${x}</option>`).join("");
+function optionsHtml(list, valueMode = false, includeOther = false) {
+  const values = valueMode ? list.map((x) => `<option value="${x.score}">${x.label}</option>`) : list.map((x) => `<option>${x}</option>`);
+  if (includeOther) values.push(`<option value="${OTHER_VALUE}">Інше (власноруч)</option>`);
+  return values.join("");
 }
 
 function renderLesionList(side) {
@@ -196,7 +260,8 @@ function renderLesionList(side) {
       </div>
       <div class="lesion-grid">
         <label>Тип утвору
-          <select data-field="kind">${optionsHtml(OPTIONS.lesionKind)}</select>
+          <select data-field="kind">${optionsHtml(OPTIONS.lesionKind, false, true)}</select>
+          <input class="custom-input" data-custom-for="kind" placeholder="Вкажіть власний варіант" />
         </label>
         <label>BI-RADS утвору
           <select data-field="birads">${optionsHtml(BIRADS_OPTIONS, true)}</select>
@@ -212,20 +277,25 @@ function renderLesionList(side) {
         </div>
 
         <label data-role="mass">Форма (mass)
-          <select data-field="massShape">${optionsHtml(OPTIONS.massShape)}</select>
+          <select data-field="massShape">${optionsHtml(OPTIONS.massShape, false, true)}</select>
+          <input class="custom-input" data-custom-for="massShape" placeholder="Вкажіть власний варіант" />
         </label>
         <label data-role="mass">Контури (mass)
-          <select data-field="massMargin">${optionsHtml(OPTIONS.massMargin)}</select>
+          <select data-field="massMargin">${optionsHtml(OPTIONS.massMargin, false, true)}</select>
+          <input class="custom-input" data-custom-for="massMargin" placeholder="Вкажіть власний варіант" />
         </label>
         <label data-role="mass">Внутрішнє підсилення (mass)
-          <select data-field="massInternal">${optionsHtml(OPTIONS.massInternal)}</select>
+          <select data-field="massInternal">${optionsHtml(OPTIONS.massInternal, false, true)}</select>
+          <input class="custom-input" data-custom-for="massInternal" placeholder="Вкажіть власний варіант" />
         </label>
 
         <label data-role="nme">Розподіл (NME)
-          <select data-field="nmeDistribution">${optionsHtml(OPTIONS.nmeDistribution)}</select>
+          <select data-field="nmeDistribution">${optionsHtml(OPTIONS.nmeDistribution, false, true)}</select>
+          <input class="custom-input" data-custom-for="nmeDistribution" placeholder="Вкажіть власний варіант" />
         </label>
         <label data-role="nme">Внутрішній патерн (NME)
-          <select data-field="nmeInternal">${optionsHtml(OPTIONS.nmeInternal)}</select>
+          <select data-field="nmeInternal">${optionsHtml(OPTIONS.nmeInternal, false, true)}</select>
+          <input class="custom-input" data-custom-for="nmeInternal" placeholder="Вкажіть власний варіант" />
         </label>
 
         <label>Година (1-12)
@@ -238,21 +308,55 @@ function renderLesionList(side) {
           <input data-field="depth" type="number" min="0" max="60" value="${lesion.depth}" />
         </label>
         <label>Початкова фаза накопичення
-          <select data-field="initial">${optionsHtml(OPTIONS.lesionInitial)}</select>
+          <select data-field="initial">${optionsHtml(OPTIONS.lesionInitial, false, true)}</select>
+          <input class="custom-input" data-custom-for="initial" placeholder="Вкажіть власний варіант" />
         </label>
         <label>Відстрочена фаза (крива)
-          <select data-field="delayed">${optionsHtml(OPTIONS.lesionDelayed)}</select>
+          <select data-field="delayed">${optionsHtml(OPTIONS.lesionDelayed, false, true)}</select>
+          <input class="custom-input" data-custom-for="delayed" placeholder="Вкажіть власний варіант" />
         </label>
         <label>DWI утвору
-          <select data-field="dwi">${optionsHtml(OPTIONS.lesionDwi)}</select>
+          <select data-field="dwi">${optionsHtml(OPTIONS.lesionDwi, false, true)}</select>
+          <input class="custom-input" data-custom-for="dwi" placeholder="Вкажіть власний варіант" />
         </label>
       </div>
     `;
 
-    for (const control of card.querySelectorAll("select,input")) {
+    for (const control of card.querySelectorAll("select,input[data-field]")) {
       const field = control.dataset.field;
       control.value = lesion[field];
       control.addEventListener("input", () => updateLesion(side, lesion.id, field, parseValue(field, control.value)));
+    }
+
+    const customSelectFields = ["kind", "massShape", "massMargin", "massInternal", "nmeDistribution", "nmeInternal", "initial", "delayed", "dwi"];
+    for (const field of customSelectFields) {
+      const select = card.querySelector(`select[data-field="${field}"]`);
+      const customInput = card.querySelector(`[data-custom-for="${field}"]`);
+      const optionKey =
+        field === "kind"
+          ? "lesionKind"
+          : field === "initial"
+            ? "lesionInitial"
+            : field === "delayed"
+              ? "lesionDelayed"
+              : field === "dwi"
+                ? "lesionDwi"
+                : field;
+
+      syncSelectOther(select, customInput, OPTIONS[optionKey], lesion[field]);
+
+      select.addEventListener("change", () => {
+        if (select.value === OTHER_VALUE) {
+          customInput.style.display = "block";
+          updateLesion(side, lesion.id, field, customInput.value || "інше");
+          return;
+        }
+        customInput.value = "";
+        customInput.style.display = "none";
+        updateLesion(side, lesion.id, field, select.value);
+      });
+
+      customInput.addEventListener("input", () => updateLesion(side, lesion.id, field, customInput.value || "інше"));
     }
 
     const isMass = lesion.kind === "mass";
@@ -358,6 +462,7 @@ function renderSummaries() {
 }
 
 function renderReport() {
+  for (const side of SIDES) updateNodesPathologyFields(side);
   const lines = ["### MRI молочних залоз (BI-RADS)", "", ...sideBlock("right"), "", ...sideBlock("left")];
   document.getElementById("report-output").value = lines.join("\n");
 }
@@ -369,17 +474,23 @@ function lesionText(l) {
   } else if (l.kind === "non-mass enhancement") {
     morph = `non-mass enhancement: розподіл ${l.nmeDistribution}, патерн ${l.nmeInternal}`;
   } else {
-    morph = "focus";
+    morph = l.kind;
   }
 
   return `- #${l.id}: ${morph}; розміри ${l.sizeX}×${l.sizeY} мм; BI-RADS утвору: ${biradsLabel(l.birads)}; локалізація ${l.clock} год, ${l.nippleDist} мм від соска, глибина ${l.depth} мм; динаміка: initial ${l.initial}, delayed ${l.delayed}; DWI: ${l.dwi}.`;
 }
 
 function sideBlock(side) {
-  const get = (key) => document.getElementById(`${side}-${key}`).value;
+  const get = (key) => getFieldValue(side, key);
   const lesions = sideState[side].lesions;
   const lesionLines = lesions.length ? lesions.map(lesionText) : ["- патологічних солідних вогнищ не виявлено."];
   const summary = getSideSummary(side);
+  const nodeStatus = get("nodes-status");
+  const nodeSize = get("nodes-size");
+  const isPathological = nodeStatus === "патологічно змінені";
+  const nodeExtras = isPathological
+    ? `, NODE-RADS ${get("node-rads")}, кількість патологічних: ${Math.max(1, Number(document.getElementById(`${side}-nodes-count`).value) || 1)}`
+    : "";
 
   return [
     `${SIDE_LABEL[side]} breast:`,
@@ -391,7 +502,7 @@ function sideBlock(side) {
     ...lesionLines,
     `Протоки: ${get("ducts")}.`,
     `Шкіра і підшкірна клітковина: ${get("skin")}.`,
-    `Пахвові лімфатичні вузли: ${get("nodes")}.`,
+    `Пахвові лімфатичні вузли: ${nodeStatus}; розмір: ${nodeSize}${nodeExtras}.`,
     `Грудні м'язи: ${get("muscles")}.`,
     `Сумарний висновок для залози: ${summary.label}${summary.lesionId ? ` (відповідає утвору #${summary.lesionId})` : ""}.`,
   ];
