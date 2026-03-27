@@ -59,6 +59,21 @@ h3 {
 
 .nodes-fieldset {
   grid-column: span 2;
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(120px, 1fr) minmax(120px, 1fr);
+  gap: 0.6rem;
+  align-items: end;
+}
+
+.nodes-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.nodes-item-compact input,
+.nodes-item-compact select {
+  text-align: center;
 }
 
 .report-panel {
@@ -249,14 +264,10 @@ textarea {
   gap: 0.3rem;
 }
 
-
-.custom-input {
-  display: none;
-  margin-top: 0.35rem;
-}
-
-.nodes-fieldset {
-  grid-column: span 2;
+@media (max-width: 760px) {
+  .nodes-fieldset {
+    grid-template-columns: 1fr;
+  }
 }
 
 .report-panel {
