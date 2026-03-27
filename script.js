@@ -7,7 +7,7 @@ const OTHER_VALUE = "__other__";
 const SIDES = ["right", "left"];
 const SIDE_LABEL = { right: "Right", left: "Left" };
 
-const FIELD_KEYS = ["tissue-structure", "bitype", "bpe", "parenchyma", "ducts", "skin", "nodes-status", "nodes-size", "node-rads", "muscles"];
+const FIELD_KEYS = ["tissue-structure", "bpe", "bpe-symmetry", "ducts", "skin", "node-rads", "muscles"];
 
 const BIRADS_OPTIONS = [
   { score: 1, label: "BI-RADS 1 — патології не виявлено" },
@@ -50,32 +50,18 @@ const TEMPLATE_GROUP_LABEL = { mass: "MASS", focus: "FOCUS", nme: "NME" };
 
 const OPTIONS = {
   "tissue-structure": [
-    "представлена переважно жировою тканиною",
-    "представлена переважно фіброзною тканиною",
-    "представлена фіброгландулярною тканиною",
-    "представлена гетерогенною фіброгландулярною тканиною",
-    "представлена переважно фіброзно-кістозно зміненою тканиною",
-  ],
-  bitype: [
-    "Тип a — майже повністю жирова",
-    "Тип b — розсіяна фіброгландулярна тканина",
-    "Тип c — гетерогенно-щільна / з переважанням фіброзної тканини",
-    "Тип d — виражено щільна",
+    "переважно жирова",
+    "розсіяні ділянки фіброгландулярної тканини",
+    "гетерогенна",
+    "виражено фіброгландулярна",
   ],
   bpe: ["мінімальне", "слабке (mild)", "помірне (moderate)", "виражене (marked)"],
-  parenchyma: [
-    "однорідна, без патологічного накопичення контрасту",
-    "неоднорідна без вогнищевого патологічного підсилення",
-    "неоднорідної структури за рахунок фіброзних змін",
-    "неоднорідної структури за рахунок множинних кістозних включень",
-    "дифузне / регіонарне non-mass enhancement",
-    "з ділянками патологічного накопичення контрасту",
-  ],
+  "bpe-symmetry": ["симетрично", "асиметрично"],
   ducts: [
     "не розширені",
     "незначно розширені у ретроареолярних ділянках",
     "розширені, з однорідним вмістом",
-    "розширені, з підозрою на патологічний вміст",
+    "розширені, з неоднорідним вмістом",
     "внутрішньопротокове підсилення (підозріле)",
   ],
   skin: [
@@ -84,8 +70,6 @@ const OPTIONS = {
     "потовщення та підсилення шкіри",
     "ознаки інфільтрації підшкірної клітковини",
   ],
-  "nodes-status": ["не змінені", "патологічно змінені"],
-  "nodes-size": ["до 5 мм", "6-10 мм", "11-15 мм", ">15 мм"],
   "node-rads": ["1", "2", "3", "4", "5"],
   muscles: ["без особливостей", "без ознак інфільтрації", "з ознаками інвазії"],
   lesionKind: ["focus", "mass", "non-mass enhancement"],
@@ -128,15 +112,13 @@ function initTemplateSelects() {
 
       select.addEventListener("change", () => {
         syncSelectOther(select, customInput, OPTIONS[key], select.value);
-        if (key === "nodes-status") updateNodesPathologyFields(side);
         renderReport();
       });
       customInput.addEventListener("input", renderReport);
     }
 
-    const nodeCount = document.getElementById(`${side}-nodes-count`);
-    nodeCount.addEventListener("input", renderReport);
-    updateNodesPathologyFields(side);
+    document.getElementById(`${side}-nodes-size`).addEventListener("input", renderReport);
+    document.getElementById(`${side}-nodes-count`).addEventListener("input", renderReport);
   }
 }
 
@@ -188,13 +170,6 @@ function getFieldValue(side, key) {
   const custom = document.getElementById(`${side}-${key}-custom`);
   if (select.value === OTHER_VALUE) return custom.value.trim() || "інше";
   return select.value;
-}
-
-function updateNodesPathologyFields(side) {
-  const pathological = getFieldValue(side, "nodes-status") === "патологічно змінені";
-  document.querySelectorAll(`[data-node-extra="${side}"]`).forEach((el) => {
-    el.style.display = pathological ? "block" : "none";
-  });
 }
 
 function initLesionControls() {
@@ -542,7 +517,6 @@ function renderSummaries() {
 }
 
 function renderReport() {
-  for (const side of SIDES) updateNodesPathologyFields(side);
   const lines = ["### MRI молочних залоз (BI-RADS)", "", ...sideBlock("right"), "", ...sideBlock("left")];
   document.getElementById("report-output").value = lines.join("\n");
 }
@@ -565,27 +539,40 @@ function sideBlock(side) {
   const lesions = sideState[side].lesions;
   const lesionLines = lesions.length ? lesions.map(lesionText) : ["- патологічних солідних вогнищ не виявлено."];
   const summary = getSideSummary(side);
-  const nodeStatus = get("nodes-status");
-  const nodeSize = get("nodes-size");
-  const isPathological = nodeStatus === "патологічно змінені";
-  const nodeExtras = isPathological
-    ? `, NODE-RADS ${get("node-rads")}, кількість патологічних: ${Math.max(1, Number(document.getElementById(`${side}-nodes-count`).value) || 1)}`
-    : "";
+  const nodeSizeRaw = document.getElementById(`${side}-nodes-size`).value.trim();
+  const nodeSize = nodeSizeRaw || "не вказано";
+  const nodeCount = Math.max(0, Number(document.getElementById(`${side}-nodes-count`).value) || 0);
+  const parenchymaText = buildParenchymaText(lesions);
 
   return [
     `${SIDE_LABEL[side]} breast:`,
-    `Будова залозистої тканини: ${get("tissue-structure")}.`,
-    `Тип тканини (BI-RADS): ${get("bitype")}.`,
-    `Фонове контрастування (BPE): ${get("bpe")}.`,
-    `Паренхіма: ${get("parenchyma")}.`,
+    `Паренхіма грудних залоз: ${get("tissue-structure")}.`,
+    `Фонове контрастування (BPE): ${get("bpe")}, ${get("bpe-symmetry")}.`,
+    `Паренхіма: ${parenchymaText}.`,
     "Утворення:",
     ...lesionLines,
     `Протоки: ${get("ducts")}.`,
     `Шкіра і підшкірна клітковина: ${get("skin")}.`,
-    `Пахвові лімфатичні вузли: ${nodeStatus}; розмір: ${nodeSize}${nodeExtras}.`,
+    `Пахвові лімфатичні вузли: розмір ${nodeSize}; NODE-RADS ${get("node-rads")}; кількість ${nodeCount}.`,
     `Грудні м'язи: ${get("muscles")}.`,
     `Сумарний висновок для залози: ${summary.label}${summary.lesionId ? ` (відповідає утвору #${summary.lesionId})` : ""}.`,
   ];
+}
+
+function buildParenchymaText(lesions) {
+  if (!lesions.length) return "однорідна";
+
+  const lesionDescriptions = lesions.map((l) => {
+    if (l.kind === "mass") {
+      return `утвір #${l.id} (mass, ${l.massShape}, контури ${l.massMargin}, внутрішнє підсилення ${l.massInternal}, ${l.sizeX}×${l.sizeY} мм)`;
+    }
+    if (l.kind === "non-mass enhancement") {
+      return `утвір #${l.id} (non-mass enhancement, ${l.nmeDistribution}, патерн ${l.nmeInternal}, ${l.sizeX}×${l.sizeY} мм)`;
+    }
+    return `утвір #${l.id} (${l.kind}, ${l.sizeX}×${l.sizeY} мм)`;
+  });
+
+  return `неоднорідна за рахунок утворень: ${lesionDescriptions.join("; ")}`;
 }
 
 function drawCoronalMap(svg) {
