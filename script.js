@@ -18,6 +18,36 @@ const BIRADS_OPTIONS = [
   { score: 6, label: "BI-RADS 6 — верифікований рак" },
 ];
 
+
+
+const LESION_TEMPLATES = {
+  mass: [
+    { name: "Проста кіста", kind: "mass", birads: "2", massShape: "округла", massMargin: "чіткі", massInternal: "відсутнє", initial: "відсутнє", delayed: "відсутня", dwi: "без обмеження" },
+    { name: "Складна кіста", kind: "mass", birads: "3", massShape: "округла", massMargin: "чіткі", massInternal: "неоднорідне", initial: "повільне", delayed: "persistent", dwi: "без обмеження" },
+    { name: "Фіброаденома", kind: "mass", birads: "3", massShape: "овальна", massMargin: "чіткі", massInternal: "однорідне", initial: "повільне", delayed: "persistent", dwi: "без обмеження" },
+    { name: "Атипова фіброаденома", kind: "mass", birads: "4", massShape: "овальна", massMargin: "частково нечіткі", massInternal: "неоднорідне", initial: "середнє", delayed: "plateau", dwi: "помірне обмеження" },
+    { name: "Гамартома", kind: "mass", birads: "2", massShape: "овальна", massMargin: "чіткі", massInternal: "неоднорідне", initial: "відсутнє", delayed: "відсутня", dwi: "без обмеження" },
+    { name: "Внутрішньомамарний лімфатичний вузол", kind: "mass", birads: "2", massShape: "овальна", massMargin: "чіткі", massInternal: "однорідне", initial: "повільне", delayed: "persistent", dwi: "без обмеження" },
+    { name: "Жировий некроз", kind: "mass", birads: "4", massShape: "неправильна", massMargin: "частково нечіткі", massInternal: "периферичне", initial: "повільне", delayed: "plateau", dwi: "слабке обмеження" },
+    { name: "Радіальний рубець", kind: "mass", birads: "4", massShape: "неправильна", massMargin: "спікульовані", massInternal: "неоднорідне", initial: "повільне", delayed: "plateau", dwi: "варіабельно" },
+    { name: "Інвазивна карцинома (IDC)", kind: "mass", birads: "5", massShape: "неправильна", massMargin: "спікульовані", massInternal: "неоднорідне", initial: "швидке", delayed: "washout", dwi: "обмеження" },
+  ],
+  focus: [
+    { name: "Доброякісний фокус", kind: "focus", birads: "3", initial: "повільне", delayed: "persistent", dwi: "без обмеження" },
+    { name: "Множинні фокуси", kind: "focus", birads: "2", initial: "повільне", delayed: "persistent", dwi: "без обмеження" },
+  ],
+  nme: [
+    { name: "Фокальне підсилення без маси", kind: "non-mass enhancement", birads: "3", nmeDistribution: "фокальний", nmeInternal: "однорідний", initial: "повільне", delayed: "persistent", dwi: "без обмеження" },
+    { name: "Лінійне підсилення без маси", kind: "non-mass enhancement", birads: "4", nmeDistribution: "лінійний", nmeInternal: "неоднорідний", initial: "середнє", delayed: "plateau", dwi: "варіабельно" },
+    { name: "Протокове підсилення без маси", kind: "non-mass enhancement", birads: "4", nmeDistribution: "лінійний", nmeInternal: "неоднорідний", initial: "середнє", delayed: "plateau", dwi: "варіабельно" },
+    { name: "Сегментарне clumped-підсилення (DCIS)", kind: "non-mass enhancement", birads: "5", nmeDistribution: "сегментарний", nmeInternal: "clumped", initial: "швидке", delayed: "washout", dwi: "варіабельно" },
+    { name: "Регіонарне підсилення без маси", kind: "non-mass enhancement", birads: "4", nmeDistribution: "регіонарний", nmeInternal: "неоднорідний", initial: "повільне", delayed: "plateau", dwi: "варіабельно" },
+    { name: "Дифузне підсилення без маси", kind: "non-mass enhancement", birads: "2", nmeDistribution: "дифузний", nmeInternal: "однорідний", initial: "повільне", delayed: "persistent", dwi: "без обмеження" },
+  ],
+};
+
+const TEMPLATE_GROUP_LABEL = { mass: "MASS", focus: "FOCUS", nme: "NME" };
+
 const OPTIONS = {
   "tissue-structure": [
     "представлена переважно жировою тканиною",
@@ -60,13 +90,13 @@ const OPTIONS = {
   muscles: ["без особливостей", "без ознак інфільтрації", "з ознаками інвазії"],
   lesionKind: ["focus", "mass", "non-mass enhancement"],
   massShape: ["округла", "овальна", "неправильна"],
-  massMargin: ["чіткі", "нерівні", "спікулярні"],
-  massInternal: ["однорідне", "неоднорідне", "rim enhancement", "dark internal septations"],
+  massMargin: ["чіткі", "частково нечіткі", "нерівні", "спікульовані"],
+  massInternal: ["відсутнє", "однорідне", "неоднорідне", "периферичне", "rim enhancement", "dark internal septations"],
   nmeDistribution: ["фокальний", "лінійний", "сегментарний", "регіонарний", "множинний регіонарний", "дифузний"],
   nmeInternal: ["однорідний", "неоднорідний", "clumped", "clustered ring"],
-  lesionInitial: ["повільне (slow)", "середнє (medium)", "швидке (fast)"],
-  lesionDelayed: ["persistent (I тип)", "plateau (II тип)", "washout (III тип)"],
-  lesionDwi: ["без обмеження дифузії", "з обмеженням дифузії"],
+  lesionInitial: ["відсутнє", "повільне", "середнє", "швидке"],
+  lesionDelayed: ["відсутня", "persistent", "plateau", "washout"],
+  lesionDwi: ["без обмеження", "слабке обмеження", "помірне обмеження", "обмеження", "варіабельно"],
 };
 
 const sideState = {
@@ -77,6 +107,7 @@ const sideState = {
 initMaps();
 initTemplateSelects();
 initLesionControls();
+initDrawerControls();
 initReportControls();
 renderAll();
 
@@ -167,8 +198,56 @@ function updateNodesPathologyFields(side) {
 }
 
 function initLesionControls() {
-  document.getElementById("add-right").addEventListener("click", () => addLesion("right"));
-  document.getElementById("add-left").addEventListener("click", () => addLesion("left"));
+  document.getElementById("add-right").addEventListener("click", () => openTemplateDrawer("right"));
+  document.getElementById("add-left").addEventListener("click", () => openTemplateDrawer("left"));
+}
+
+function initDrawerControls() {
+  document.getElementById("drawer-close").addEventListener("click", closeTemplateDrawer);
+  document.getElementById("drawer-backdrop").addEventListener("click", closeTemplateDrawer);
+}
+
+function openTemplateDrawer(side) {
+  const drawer = document.getElementById("template-drawer");
+  drawer.classList.add("open");
+  drawer.setAttribute("aria-hidden", "false");
+  drawer.dataset.side = side;
+  document.getElementById("drawer-side-label").textContent = SIDE_LABEL[side];
+
+  const groupsWrap = document.getElementById("drawer-groups");
+  groupsWrap.innerHTML = "";
+
+  for (const [groupKey, templates] of Object.entries(LESION_TEMPLATES)) {
+    const group = document.createElement("section");
+    group.className = "drawer-group";
+    const title = document.createElement("h4");
+    title.textContent = TEMPLATE_GROUP_LABEL[groupKey] || groupKey;
+    group.appendChild(title);
+
+    const list = document.createElement("div");
+    list.className = "drawer-template-list";
+
+    for (const template of templates) {
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "template-btn";
+      btn.textContent = template.name;
+      btn.addEventListener("click", () => {
+        addLesion(side, template);
+        closeTemplateDrawer();
+      });
+      list.appendChild(btn);
+    }
+
+    group.appendChild(list);
+    groupsWrap.appendChild(group);
+  }
+}
+
+function closeTemplateDrawer() {
+  const drawer = document.getElementById("template-drawer");
+  drawer.classList.remove("open");
+  drawer.setAttribute("aria-hidden", "true");
 }
 
 function initReportControls() {
@@ -183,7 +262,7 @@ function initReportControls() {
   });
 }
 
-function addLesion(side) {
+function addLesion(side, preset = {}) {
   const state = sideState[side];
   if (state.lesions.length >= MAX_LESIONS) {
     alert(`Досягнуто ліміту ${MAX_LESIONS} утворень для ${side.toUpperCase()}`);
@@ -192,7 +271,7 @@ function addLesion(side) {
 
   state.lesions.push({
     id: state.seq++,
-    kind: OPTIONS.lesionKind[1],
+    kind: "mass",
     massShape: OPTIONS.massShape[0],
     massMargin: OPTIONS.massMargin[0],
     massInternal: OPTIONS.massInternal[0],
@@ -203,10 +282,11 @@ function addLesion(side) {
     clock: 12,
     nippleDist: 30,
     depth: 25,
-    initial: OPTIONS.lesionInitial[0],
-    delayed: OPTIONS.lesionDelayed[0],
+    initial: OPTIONS.lesionInitial[1],
+    delayed: OPTIONS.lesionDelayed[1],
     dwi: OPTIONS.lesionDwi[0],
     birads: "3",
+    ...preset,
   });
   renderAll();
 }
