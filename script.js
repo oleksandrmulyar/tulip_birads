@@ -542,6 +542,8 @@ function sideBlock(side) {
   const nodeSizeRaw = document.getElementById(`${side}-nodes-size`).value.trim();
   const nodeSize = nodeSizeRaw || "не вказано";
   const nodeCount = Math.max(0, Number(document.getElementById(`${side}-nodes-count`).value) || 0);
+  const nodeSizeNormalized = nodeSize === "не вказано" ? nodeSize : (/^до\s+/i.test(nodeSize) ? nodeSize : `до ${nodeSize}`);
+  const nodeCountText = nodeCount > 0 ? `; кількість - ${nodeCount}` : "";
   const parenchymaText = buildParenchymaText(lesions);
 
   return [
@@ -552,7 +554,7 @@ function sideBlock(side) {
     ...(lesions.length ? ["", ...lesionLines] : lesionLines),
     `Протоки: ${get("ducts")}.`,
     `Шкіра і підшкірна клітковина: ${get("skin")}.`,
-    `Пахвові лімфатичні вузли: розмір ${nodeSize}; NODE-RADS ${get("node-rads")}; кількість ${nodeCount}.`,
+    `Пахвові лімфатичні вузли розміром ${nodeSizeNormalized}; NODE-RADS ${get("node-rads")}${nodeCountText}.`,
     `Грудні м'язи: ${get("muscles")}.`,
     `Сумарний висновок для залози: ${summary.label}${summary.lesionId ? ` (відповідає утвору #${summary.lesionId})` : ""}.`,
   ];
