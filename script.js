@@ -548,9 +548,8 @@ function sideBlock(side) {
     `${SIDE_LABEL[side]} breast:`,
     `Паренхіма грудних залоз: ${get("tissue-structure")}.`,
     `Фонове контрастування (BPE): ${get("bpe")}, ${get("bpe-symmetry")}.`,
-    `Паренхіма: ${parenchymaText}.`,
-    "Утворення:",
-    ...lesionLines,
+    `Паренхіма: ${parenchymaText}${lesions.length ? ":" : "."}`,
+    ...(lesions.length ? ["", ...lesionLines] : lesionLines),
     `Протоки: ${get("ducts")}.`,
     `Шкіра і підшкірна клітковина: ${get("skin")}.`,
     `Пахвові лімфатичні вузли: розмір ${nodeSize}; NODE-RADS ${get("node-rads")}; кількість ${nodeCount}.`,
@@ -562,17 +561,7 @@ function sideBlock(side) {
 function buildParenchymaText(lesions) {
   if (!lesions.length) return "однорідна";
 
-  const lesionDescriptions = lesions.map((l) => {
-    if (l.kind === "mass") {
-      return `утвір #${l.id} (mass, ${l.massShape}, контури ${l.massMargin}, внутрішнє підсилення ${l.massInternal}, ${l.sizeX}×${l.sizeY} мм)`;
-    }
-    if (l.kind === "non-mass enhancement") {
-      return `утвір #${l.id} (non-mass enhancement, ${l.nmeDistribution}, патерн ${l.nmeInternal}, ${l.sizeX}×${l.sizeY} мм)`;
-    }
-    return `утвір #${l.id} (${l.kind}, ${l.sizeX}×${l.sizeY} мм)`;
-  });
-
-  return `неоднорідна за рахунок утворень: ${lesionDescriptions.join("; ")}`;
+  return "неоднорідна за рахунок утворень";
 }
 
 function drawCoronalMap(svg) {
