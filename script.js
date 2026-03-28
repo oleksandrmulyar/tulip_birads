@@ -249,7 +249,7 @@ function initReportControls() {
   const reportEl = document.getElementById("report-output");
   document.getElementById("copy-report").addEventListener("click", async () => {
     try {
-      await navigator.clipboard.writeText(reportEl.value);
+      await navigator.clipboard.writeText(reportEl.innerText);
       alert("Текст скопійовано");
     } catch {
       alert("Не вдалося скопіювати автоматично. Скопіюйте вручну.");
@@ -551,13 +551,13 @@ function lesionText(l) {
   }
 
   const lesionName = (l.name || "утвір").replace(/^\+$/, "утвір");
-  return `№${l.id} ${lesionName}: ${morph}; розміри ${l.sizeX}×${l.sizeY} мм; ${biradsLabel(l.birads)}; локалізація ${l.clock} год, ${l.nippleDist} мм від соска, глибина ${l.depth} мм; динаміка: initial ${l.initial}, delayed ${l.delayed}; DWI: ${l.dwi}.`;
+  return escHtml(`№${l.id} ${lesionName}: ${morph}; розміри ${l.sizeX}×${l.sizeY} мм; ${biradsLabel(l.birads)}; локалізація ${l.clock} год, ${l.nippleDist} мм від соска, глибина ${l.depth} мм; динаміка: initial ${l.initial}, delayed ${l.delayed}; DWI: ${l.dwi}.`);
 }
 
 function sideBlock(side) {
   const get = (key) => getFieldValue(side, key);
   const lesions = sideState[side].lesions;
-  const lesionLines = lesions.length ? lesions.map(lesionText) : ["- патологічних солідних вогнищ не виявлено."];
+  const lesionLines = lesions.length ? lesions.map(lesionText) : [escHtml("- патологічних солідних вогнищ не виявлено.")];
   const summary = getSideSummary(side);
   const nodeSizeRaw = document.getElementById(`${side}-nodes-size`).value.trim();
   const nodeSize = nodeSizeRaw || "не вказано";
@@ -578,6 +578,13 @@ function sideBlock(side) {
     `\\*Грудні м'язи: ${get("muscles")}.\\*`,
     `\\*Сумарний висновок для залози: ${summary.label}.\\*`,
   ];
+}
+
+function escHtml(value) {
+  return String(value)
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;");
 }
 
 function buildParenchymaText(lesions) {
