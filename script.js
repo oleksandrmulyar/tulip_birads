@@ -10,12 +10,12 @@ const SIDE_LABEL = { right: "Right", left: "Left" };
 const FIELD_KEYS = ["tissue-structure", "bpe", "bpe-symmetry", "ducts", "skin", "node-rads", "muscles"];
 
 const BIRADS_OPTIONS = [
-  { score: 1, label: "BI-RADS 1 — патології не виявлено" },
-  { score: 2, label: "BI-RADS 2 — доброякісні зміни" },
-  { score: 3, label: "BI-RADS 3 — ймовірно доброякісне" },
-  { score: 4, label: "BI-RADS 4 — підозріле" },
-  { score: 5, label: "BI-RADS 5 — висока ймовірність злоякісності" },
-  { score: 6, label: "BI-RADS 6 — верифікований рак" },
+  { score: 1, label: "BI-RADS 1" },
+  { score: 2, label: "BI-RADS 2" },
+  { score: 3, label: "BI-RADS 3" },
+  { score: 4, label: "BI-RADS 4" },
+  { score: 5, label: "BI-RADS 5" },
+  { score: 6, label: "BI-RADS 6" },
 ];
 
 
@@ -62,7 +62,7 @@ const OPTIONS = {
     "незначно розширені у ретроареолярних ділянках",
     "розширені, з однорідним вмістом",
     "розширені, з неоднорідним вмістом",
-    "внутрішньопротокове підсилення (підозріле)",
+    "внутрішньопротокове підсилення",
   ],
   skin: [
     "не потовщені, без ознак інфільтрації",
