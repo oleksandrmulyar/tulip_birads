@@ -249,7 +249,7 @@ function initReportControls() {
   const reportEl = document.getElementById("report-output");
   document.getElementById("copy-report").addEventListener("click", async () => {
     try {
-      await navigator.clipboard.writeText(reportEl.value);
+      await navigator.clipboard.writeText(reportEl.innerText);
       alert("Текст скопійовано");
     } catch {
       alert("Не вдалося скопіювати автоматично. Скопіюйте вручну.");
@@ -536,8 +536,14 @@ function renderSummaries() {
 }
 
 function renderReport() {
-  const lines = ["***Грудні залози***", "", ...sideBlock("right"), "", ...sideBlock("left")];
-  document.getElementById("report-output").value = lines.join("\n");
+  const blocks = [
+    `<strong>Грудні залози</strong>`,
+    "",
+    ...sideBlock("right"),
+    "",
+    ...sideBlock("left"),
+  ];
+  document.getElementById("report-output").innerHTML = blocks.join("<br>");
 }
 
 function lesionText(l) {
@@ -551,13 +557,13 @@ function lesionText(l) {
   }
 
   const lesionName = (l.name || "утвір").replace(/^\+$/, "утвір");
-  return `№${l.id} ${lesionName}: ${morph}; розміри ${l.sizeX}×${l.sizeY} мм; ${biradsLabel(l.birads)}; локалізація ${l.clock} год, ${l.nippleDist} мм від соска, глибина ${l.depth} мм; динаміка: initial ${l.initial}, delayed ${l.delayed}; DWI: ${l.dwi}.`;
+  return escHtml(`№${l.id} ${lesionName}: ${morph}; розміри ${l.sizeX}×${l.sizeY} мм; ${biradsLabel(l.birads)}; локалізація ${l.clock} год, ${l.nippleDist} мм від соска, глибина ${l.depth} мм; динаміка: initial ${l.initial}, delayed ${l.delayed}; DWI: ${l.dwi}.`);
 }
 
 function sideBlock(side) {
   const get = (key) => getFieldValue(side, key);
   const lesions = sideState[side].lesions;
-  const lesionLines = lesions.length ? lesions.map(lesionText) : ["- патологічних солідних вогнищ не виявлено."];
+  const lesionLines = lesions.length ? lesions.map(lesionText) : [escHtml("- патологічних солідних вогнищ не виявлено.")];
   const summary = getSideSummary(side);
   const nodeSizeRaw = document.getElementById(`${side}-nodes-size`).value.trim();
   const nodeSize = nodeSizeRaw || "не вказано";
@@ -567,17 +573,24 @@ function sideBlock(side) {
   const parenchymaText = buildParenchymaText(lesions);
 
   return [
-    `***${side === "right" ? "Права" : "Ліва"} грудна залоза:***`,
-    `*Паренхіма грудних залоз: ${get("tissue-structure")}.*`,
-    `*Фонове контрастування (BPE): ${get("bpe")}, ${get("bpe-symmetry")}.*`,
-    `*Паренхіма: ${parenchymaText}${lesions.length ? ":" : "."}*`,
+    `<strong>${side === "right" ? "Права" : "Ліва"} грудна залоза:</strong>`,
+    `<em>${escHtml(`Паренхіма грудних залоз: ${get("tissue-structure")}.`)}</em>`,
+    `<em>${escHtml(`Фонове контрастування (BPE): ${get("bpe")}, ${get("bpe-symmetry")}.`)}</em>`,
+    `<em>${escHtml(`Паренхіма: ${parenchymaText}${lesions.length ? ":" : "."}`)}</em>`,
     ...lesionLines,
-    `*Протоки: ${get("ducts")}.*`,
-    `*Шкіра і підшкірна клітковина: ${get("skin")}.*`,
-    `*Пахвові лімфатичні вузли: розміром ${nodeSizeNormalized}; NODE-RADS ${get("node-rads")}${nodeCountText}.*`,
-    `*Грудні м'язи: ${get("muscles")}.*`,
-    `*Сумарний висновок для залози: ${summary.label}.*`,
+    `<em>${escHtml(`Протоки: ${get("ducts")}.`)}</em>`,
+    `<em>${escHtml(`Шкіра і підшкірна клітковина: ${get("skin")}.`)}</em>`,
+    `<em>${escHtml(`Пахвові лімфатичні вузли: розміром ${nodeSizeNormalized}; NODE-RADS ${get("node-rads")}${nodeCountText}.`)}</em>`,
+    `<em>${escHtml(`Грудні м'язи: ${get("muscles")}.`)}</em>`,
+    `<em>${escHtml(`Сумарний висновок для залози: ${summary.label}.`)}</em>`,
   ];
+}
+
+function escHtml(value) {
+  return String(value)
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;");
 }
 
 function buildParenchymaText(lesions) {
