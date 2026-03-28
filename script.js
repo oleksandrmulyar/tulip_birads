@@ -6,6 +6,7 @@ const NIPPLE_R = 15;
 const OTHER_VALUE = "__other__";
 const SIDES = ["right", "left"];
 const SIDE_LABEL = { right: "Right", left: "Left" };
+const DEFAULT_BREAST_DIMS = { tr: 120, ap: 60, cc: 120 };
 
 const FIELD_KEYS = ["tissue-structure", "bpe", "bpe-symmetry", "ducts", "skin", "node-rads", "muscles"];
 
@@ -119,6 +120,9 @@ function initTemplateSelects() {
 
     document.getElementById(`${side}-nodes-size`).addEventListener("input", renderReport);
     document.getElementById(`${side}-nodes-count`).addEventListener("input", renderReport);
+    document.getElementById(`${side}-size-tr`).addEventListener("input", renderAll);
+    document.getElementById(`${side}-size-ap`).addEventListener("input", renderAll);
+    document.getElementById(`${side}-size-cc`).addEventListener("input", renderAll);
   }
 }
 
@@ -454,9 +458,11 @@ function lesionColor(id) {
   return `hsl(${hue} 75% 45%)`;
 }
 
-function lesionRadius(lesion) {
+function lesionRadius(side, lesion) {
+  const dims = getBreastDims(side);
+  const glandScale = 120 / avg(dims.tr, dims.cc);
   const avg = (Number(lesion.sizeX) + Number(lesion.sizeY)) / 2;
-  return clamp(4 + avg * 0.18, 4, 16);
+  return clamp((4 + avg * 0.18) * glandScale, 3, 16);
 }
 
 function renderMarkers(side) {
@@ -467,7 +473,7 @@ function renderMarkers(side) {
 
   for (const lesion of sideState[side].lesions) {
     const color = lesionColor(lesion.id);
-    const r = lesionRadius(lesion);
+    const r = lesionRadius(side, lesion);
     const c = coronalPoint(side, lesion.clock, lesion.nippleDist);
     addMarker(coronal, c.x, c.y, lesion.id, r, color);
     const s = sagittalPoint(side, lesion.nippleDist, lesion.depth);
@@ -476,22 +482,42 @@ function renderMarkers(side) {
 }
 
 function coronalPoint(side, clock, distMm) {
-  const dist = clamp(distMm, 0, OUTER_R - 6);
+  const dims = getBreastDims(side);
+  const maxCoronalDist = Math.max(1, avg(dims.tr, dims.cc));
+  const dist = (clamp(distMm, 0, maxCoronalDist) / maxCoronalDist) * (OUTER_R - 6);
   const angle = clockToAngle(clock, side);
   return polarToCartesian(CENTER, CENTER, dist, angle);
 }
 
 function sagittalPoint(side, nippleDist, depth) {
+  const dims = getBreastDims(side);
   const xMin = 44;
   const xMax = 146;
   const yMin = 36;
   const yMax = 228;
-  const tN = clamp(nippleDist, 0, 120) / 120;
-  const tD = clamp(depth, 0, 60) / 60;
+  const tN = clamp(nippleDist, 0, dims.cc) / Math.max(1, dims.cc);
+  const tD = clamp(depth, 0, dims.ap) / Math.max(1, dims.ap);
   let x = xMax - tN * (xMax - xMin);
   if (side === "left") x = 220 - x;
   const y = yMin + tD * (yMax - yMin);
   return { x, y };
+}
+
+function getBreastDims(side) {
+  return {
+    tr: positiveNumberFromInput(`${side}-size-tr`, DEFAULT_BREAST_DIMS.tr),
+    ap: positiveNumberFromInput(`${side}-size-ap`, DEFAULT_BREAST_DIMS.ap),
+    cc: positiveNumberFromInput(`${side}-size-cc`, DEFAULT_BREAST_DIMS.cc),
+  };
+}
+
+function positiveNumberFromInput(id, fallback) {
+  const value = Number(document.getElementById(id)?.value);
+  return Number.isFinite(value) && value > 0 ? value : fallback;
+}
+
+function avg(a, b) {
+  return (Number(a) + Number(b)) / 2;
 }
 
 function addMarker(svgOrGroup, x, y, id, radius, color) {
