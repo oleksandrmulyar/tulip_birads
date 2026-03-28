@@ -463,8 +463,8 @@ function lesionColor(id) {
 function lesionRadius(side, lesion) {
   const dims = getBreastDims(side);
   const glandScale = 120 / avg(dims.tr, dims.cc);
-  const avg = (Number(lesion.sizeX) + Number(lesion.sizeY)) / 2;
-  return clamp((4 + avg * 0.18) * glandScale, 3, 16);
+  const lesionAvgSize = (Number(lesion.sizeX) + Number(lesion.sizeY)) / 2;
+  return clamp((4 + lesionAvgSize * 0.18) * glandScale, 3, 16);
 }
 
 function renderMarkers(side) {
