@@ -249,7 +249,7 @@ function initReportControls() {
   const reportEl = document.getElementById("report-output");
   document.getElementById("copy-report").addEventListener("click", async () => {
     try {
-      await navigator.clipboard.writeText(reportEl.innerText);
+      await navigator.clipboard.writeText(reportEl.textContent || "");
       alert("Текст скопійовано");
     } catch {
       alert("Не вдалося скопіювати автоматично. Скопіюйте вручну.");
@@ -537,7 +537,7 @@ function renderSummaries() {
 
 function renderReport() {
   const lines = ["\\*\\*\\*Грудні залози\\*\\*\\*", "", ...sideBlock("right"), "", ...sideBlock("left")];
-  document.getElementById("report-output").value = lines.join("\n");
+  document.getElementById("report-output").textContent = lines.join("\n");
 }
 
 function lesionText(l) {
