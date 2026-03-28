@@ -764,7 +764,6 @@ async function downloadMapsAsJpeg() {
   canvas.height = Math.round(padding * 2 + rows * (cellHeight + captionHeight) + gap * (rows - 1));
 
   const ctx = canvas.getContext("2d");
-  if (!ctx) throw new Error("Canvas context not available");
   ctx.fillStyle = "#ffffff";
   ctx.fillRect(0, 0, canvas.width, canvas.height);
   ctx.fillStyle = "#15334c";
@@ -790,23 +789,11 @@ async function svgElementToImage(svg) {
   if (!svg) throw new Error("SVG element not found");
   const clonedSvg = svg.cloneNode(true);
   const bbox = getSvgSize(svg);
-  clonedSvg.setAttribute("xmlns", "http://www.w3.org/2000/svg");
-  clonedSvg.setAttribute("xmlns:xlink", "http://www.w3.org/1999/xlink");
   clonedSvg.setAttribute("width", bbox.width);
   clonedSvg.setAttribute("height", bbox.height);
-
-  const exportStyles = collectSvgExportStyles();
-  if (exportStyles) {
-    const styleNode = document.createElementNS("http://www.w3.org/2000/svg", "style");
-    styleNode.textContent = exportStyles;
-    clonedSvg.insertBefore(styleNode, clonedSvg.firstChild);
-  }
-
   const serialized = new XMLSerializer().serializeToString(clonedSvg);
-  const blob = new Blob([serialized], { type: "image/svg+xml;charset=utf-8" });
-  const objectUrl = URL.createObjectURL(blob);
-  const image = await loadImage(objectUrl);
-  URL.revokeObjectURL(objectUrl);
+  const encoded = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(serialized)}`;
+  const image = await loadImage(encoded);
   return { image, width: bbox.width, height: bbox.height };
 }
 
@@ -831,21 +818,4 @@ function loadImage(src) {
     image.onerror = () => reject(new Error("Image loading failed"));
     image.src = src;
   });
-}
-
-function collectSvgExportStyles() {
-  const cssChunks = [];
-  for (const sheet of Array.from(document.styleSheets)) {
-    let rules;
-    try {
-      rules = sheet.cssRules;
-    } catch {
-      continue;
-    }
-    if (!rules) continue;
-    for (const rule of Array.from(rules)) {
-      cssChunks.push(rule.cssText);
-    }
-  }
-  return cssChunks.join("\n");
 }
