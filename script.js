@@ -259,6 +259,17 @@ function initReportControls() {
       alert("Не вдалося скопіювати автоматично. Скопіюйте вручну.");
     }
   });
+
+  const saveJpegBtn = document.getElementById("save-jpeg");
+  if (saveJpegBtn) {
+    saveJpegBtn.addEventListener("click", async () => {
+      try {
+        await downloadMapsAsJpeg();
+      } catch {
+        alert("Не вдалося зберегти JPEG. Спробуйте ще раз.");
+      }
+    });
+  }
 }
 
 function addLesion(side, preset = {}) {
@@ -722,4 +733,89 @@ function line(ns, x1, y1, x2, y2, className) {
 
 function clamp(v, min, max) {
   return Math.max(min, Math.min(max, v));
+}
+
+
+async function downloadMapsAsJpeg() {
+  const mapRows = [
+    { label: "Right breast — coronal", id: "map-right" },
+    { label: "Right breast — sagittal", id: "sag-right" },
+    { label: "Left breast — coronal", id: "map-left" },
+    { label: "Left breast — sagittal", id: "sag-left" },
+  ];
+
+  const renderedMaps = await Promise.all(
+    mapRows.map(async ({ label, id }) => ({
+      label,
+      image: await svgElementToImage(document.getElementById(id)),
+    })),
+  );
+
+  const padding = 28;
+  const gap = 22;
+  const captionHeight = 20;
+  const columns = 2;
+  const cellWidth = Math.max(...renderedMaps.map(({ image }) => image.width));
+  const cellHeight = Math.max(...renderedMaps.map(({ image }) => image.height));
+  const rows = Math.ceil(renderedMaps.length / columns);
+
+  const canvas = document.createElement("canvas");
+  canvas.width = Math.round(padding * 2 + cellWidth * columns + gap * (columns - 1));
+  canvas.height = Math.round(padding * 2 + rows * (cellHeight + captionHeight) + gap * (rows - 1));
+
+  const ctx = canvas.getContext("2d");
+  ctx.fillStyle = "#ffffff";
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  ctx.fillStyle = "#15334c";
+  ctx.font = "600 15px Inter, Arial, sans-serif";
+
+  renderedMaps.forEach(({ label, image }, index) => {
+    const col = index % columns;
+    const row = Math.floor(index / columns);
+    const x = padding + col * (cellWidth + gap);
+    const y = padding + row * (cellHeight + captionHeight + gap);
+    ctx.fillText(label, x, y + 14);
+    ctx.drawImage(image, x, y + captionHeight, image.width, image.height);
+  });
+
+  const timestamp = new Date().toISOString().slice(0, 19).replaceAll(":", "-");
+  const link = document.createElement("a");
+  link.download = `birads-maps-${timestamp}.jpeg`;
+  link.href = canvas.toDataURL("image/jpeg", 0.95);
+  link.click();
+}
+
+async function svgElementToImage(svg) {
+  if (!svg) throw new Error("SVG element not found");
+  const clonedSvg = svg.cloneNode(true);
+  const bbox = getSvgSize(svg);
+  clonedSvg.setAttribute("width", bbox.width);
+  clonedSvg.setAttribute("height", bbox.height);
+  const serialized = new XMLSerializer().serializeToString(clonedSvg);
+  const encoded = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(serialized)}`;
+  const image = await loadImage(encoded);
+  return { image, width: bbox.width, height: bbox.height };
+}
+
+function getSvgSize(svg) {
+  const box = svg.getBoundingClientRect();
+  if (box.width > 0 && box.height > 0) {
+    return { width: Math.round(box.width), height: Math.round(box.height) };
+  }
+
+  const viewBox = svg.viewBox?.baseVal;
+  if (viewBox && viewBox.width > 0 && viewBox.height > 0) {
+    return { width: Math.round(viewBox.width), height: Math.round(viewBox.height) };
+  }
+
+  return { width: 300, height: 300 };
+}
+
+function loadImage(src) {
+  return new Promise((resolve, reject) => {
+    const image = new Image();
+    image.onload = () => resolve(image);
+    image.onerror = () => reject(new Error("Image loading failed"));
+    image.src = src;
+  });
 }

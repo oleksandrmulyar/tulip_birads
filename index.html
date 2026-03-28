@@ -13,7 +13,7 @@
       .template-grid { display: grid !important; }
     </style>
     <title>BI-RADS MRI Constructor</title>
-    <link rel="stylesheet" href="styles.css?v=20260317" />
+    <link rel="stylesheet" href="styles.css?v=20260328" />
   </head>
   <body>
     <main class="container">
@@ -138,7 +138,10 @@
       <section class="report-panel">
         <div class="report-header">
           <h3>Згенерований текст протоколу</h3>
-          <button id="copy-report" type="button">Скопіювати</button>
+          <div class="report-actions">
+            <button id="copy-report" type="button">Скопіювати</button>
+            <button id="save-jpeg" type="button" class="secondary">Зберегти JPEG</button>
+          </div>
         </div>
         <div id="report-output" class="report-output" role="textbox" aria-readonly="true"></div>
       </section>
@@ -159,6 +162,6 @@
       </div>
     </aside>
 
-    <script src="script.js?v=20260317"></script>
+    <script src="script.js?v=20260328"></script>
   </body>
 </html>
