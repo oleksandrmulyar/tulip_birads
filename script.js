@@ -180,6 +180,7 @@ function initLesionControls() {
 function initDrawerControls() {
   document.getElementById("drawer-close").addEventListener("click", closeTemplateDrawer);
   document.getElementById("drawer-backdrop").addEventListener("click", closeTemplateDrawer);
+  document.getElementById("drawer-add-custom").addEventListener("click", addCustomTemplateLesion);
 }
 
 function openTemplateDrawer(side) {
@@ -217,6 +218,25 @@ function openTemplateDrawer(side) {
     group.appendChild(list);
     groupsWrap.appendChild(group);
   }
+}
+
+function addCustomTemplateLesion() {
+  const drawer = document.getElementById("template-drawer");
+  const side = drawer.dataset.side;
+  if (!SIDES.includes(side)) return;
+
+  addLesion(side, {
+    name: "Нестандартний шаблон",
+    kind: "mass",
+    birads: "3",
+    massShape: OPTIONS.massShape[0],
+    massMargin: OPTIONS.massMargin[0],
+    massInternal: OPTIONS.massInternal[0],
+    initial: OPTIONS.lesionInitial[1],
+    delayed: OPTIONS.lesionDelayed[1],
+    dwi: OPTIONS.lesionDwi[0],
+  });
+  closeTemplateDrawer();
 }
 
 function closeTemplateDrawer() {

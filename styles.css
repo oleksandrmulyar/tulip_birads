@@ -370,6 +370,21 @@ textarea {
   margin: 0.4rem 0 1rem;
 }
 
+.drawer-actions {
+  margin-bottom: 1rem;
+}
+
+.outline-btn {
+  width: 100%;
+  background: #fff;
+  color: #17517b;
+  border: 1px solid #17517b;
+}
+
+.outline-btn:hover {
+  background: #eef6fc;
+}
+
 .drawer-groups {
   display: grid;
   gap: 1rem;
