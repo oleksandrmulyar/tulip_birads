@@ -331,6 +331,7 @@ function renderLesionList(side) {
 
   for (const lesion of lesions) {
     const nippleDistMax = getNippleDistanceLimit(side);
+    const depthMax = getBreastDims(side).ap;
     const card = document.createElement("div");
     card.className = "lesion-card";
     card.innerHTML = `
@@ -385,7 +386,7 @@ function renderLesionList(side) {
           <input data-field="nippleDist" type="number" min="0" max="${Math.round(nippleDistMax)}" value="${lesion.nippleDist}" />
         </label>
         <label>Глибина в товщі (мм)
-          <input data-field="depth" type="number" min="0" max="60" value="${lesion.depth}" />
+          <input data-field="depth" type="number" min="0" max="${Math.round(depthMax)}" value="${lesion.depth}" />
         </label>
         <label>Початкова фаза накопичення
           <select data-field="initial">${optionsHtml(OPTIONS.lesionInitial, false, true)}</select>
@@ -479,7 +480,7 @@ function renderMarkers(side) {
     const r = lesionRadius(side, lesion);
     const c = coronalPoint(side, lesion.clock, lesion.nippleDist);
     addMarker(coronal, c.x, c.y, lesion.id, r, color);
-    const s = sagittalPoint(side, lesion.nippleDist, lesion.depth);
+    const s = sagittalPoint(side, lesion.clock, lesion.nippleDist, lesion.depth);
     addMarker(sag, s.x, s.y, lesion.id, r, color);
   }
 }
@@ -491,18 +492,30 @@ function coronalPoint(side, clock, distMm) {
   return polarToCartesian(CENTER, CENTER, dist, angle);
 }
 
-function sagittalPoint(side, nippleDist, depth) {
+function sagittalPoint(side, clock, nippleDist, depth) {
   const dims = getBreastDims(side);
-  const maxNippleDist = getNippleDistanceLimit(side);
+  const maxCcDistFromNipple = getNippleDistanceLimit(side);
   const xMin = 44;
-  const xMax = 146;
+  const xNipple = 146;
   const yMin = 36;
   const yMax = 228;
-  const tN = clamp(nippleDist, 0, maxNippleDist) / maxNippleDist;
-  const tD = clamp(depth, 0, dims.ap) / Math.max(1, dims.ap);
-  let x = xMax - tN * (xMax - xMin);
+  const yNipple = 147;
+
+  const tCc = clamp(nippleDist, 0, maxCcDistFromNipple) / Math.max(1, maxCcDistFromNipple);
+  const tAp = clamp(depth, 0, dims.ap) / Math.max(1, dims.ap);
+
+  let x = xNipple - tAp * (xNipple - xMin);
   if (side === "left") x = 220 - x;
-  const y = yMin + tD * (yMax - yMin);
+
+  const angle = clockToAngle(clock, side);
+  const verticalSign = Math.sign(Math.sin((angle * Math.PI) / 180));
+  let y = yNipple;
+  if (verticalSign < 0) {
+    y = yNipple - tCc * (yNipple - yMin);
+  } else if (verticalSign > 0) {
+    y = yNipple + tCc * (yMax - yNipple);
+  }
+
   return { x, y };
 }
 
