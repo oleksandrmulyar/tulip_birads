@@ -792,7 +792,11 @@ async function openMapsPreviewInNewTab(previewWindow = null, readyCanvas = null,
   const canvas = readyCanvas || (await renderMapsCanvas()).canvas;
   const dataUrl = canvas.toDataURL("image/jpeg", 0.95);
   const preview = previewWindow && !previewWindow.closed ? previewWindow : window.open("", "_blank");
-  if (!preview) throw new Error("Preview window blocked");
+
+  if (!preview) {
+    showInlinePreview(dataUrl, filename);
+    return;
+  }
 
   preview.document.title = "BI-RADS maps preview";
   preview.document.body.style.margin = "16px";
@@ -801,6 +805,37 @@ async function openMapsPreviewInNewTab(previewWindow = null, readyCanvas = null,
     <a href="${dataUrl}" download="${filename}" style="display:inline-block;margin-bottom:12px;font:600 14px Arial,sans-serif;color:#17517b;">⬇️ Завантажити JPEG</a>
     <img src="${dataUrl}" alt="BI-RADS maps JPEG preview" style="display:block;max-width:100%;height:auto;border:1px solid #d8e1e8;border-radius:8px;" />
   `;
+}
+
+function showInlinePreview(dataUrl, filename) {
+  let overlay = document.getElementById("jpeg-preview-overlay");
+  if (!overlay) {
+    overlay = document.createElement("div");
+    overlay.id = "jpeg-preview-overlay";
+    overlay.className = "jpeg-preview-overlay";
+    overlay.innerHTML = `
+      <div class="jpeg-preview-panel" role="dialog" aria-modal="true" aria-label="JPEG preview">
+        <button type="button" class="jpeg-preview-close" aria-label="Close preview">✕</button>
+        <p>Автозавантаження було заблоковано браузером. Натисніть кнопку нижче, щоб зберегти JPEG вручну.</p>
+        <a id="jpeg-preview-download" class="jpeg-preview-download" target="_blank" rel="noopener">⬇️ Завантажити JPEG</a>
+        <img id="jpeg-preview-image" alt="BI-RADS maps JPEG preview" />
+      </div>
+    `;
+    document.body.appendChild(overlay);
+
+    const close = () => overlay.classList.remove("open");
+    overlay.addEventListener("click", (event) => {
+      if (event.target === overlay) close();
+    });
+    overlay.querySelector(".jpeg-preview-close").addEventListener("click", close);
+  }
+
+  const downloadLink = overlay.querySelector("#jpeg-preview-download");
+  const image = overlay.querySelector("#jpeg-preview-image");
+  downloadLink.href = dataUrl;
+  downloadLink.download = filename;
+  image.src = dataUrl;
+  overlay.classList.add("open");
 }
 
 async function renderMapsCanvas() {

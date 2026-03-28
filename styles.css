@@ -438,3 +438,51 @@ textarea {
   background: #f2f7fb;
   color: #1c3850;
 }
+
+.jpeg-preview-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(14, 27, 39, 0.7);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 1200;
+  padding: 1rem;
+}
+
+.jpeg-preview-overlay.open {
+  display: flex;
+}
+
+.jpeg-preview-panel {
+  background: #fff;
+  width: min(920px, 96vw);
+  max-height: 95vh;
+  overflow: auto;
+  border-radius: 12px;
+  border: 1px solid var(--line);
+  padding: 0.85rem;
+  position: relative;
+}
+
+.jpeg-preview-close {
+  position: absolute;
+  top: 0.55rem;
+  right: 0.55rem;
+  padding: 0.25rem 0.45rem;
+  background: #355f7f;
+}
+
+.jpeg-preview-download {
+  display: inline-block;
+  margin: 0.2rem 0 0.7rem;
+  color: #17517b;
+  font-weight: 700;
+}
+
+.jpeg-preview-panel img {
+  max-width: 100%;
+  height: auto;
+  border: 1px solid #d8e1e8;
+  border-radius: 8px;
+}
