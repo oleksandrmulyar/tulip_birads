@@ -305,10 +305,10 @@ function updateLesion(side, id, field, value) {
 function renderAll() {
   renderLesionList("right");
   renderLesionList("left");
-  renderMarkers("right");
-  renderMarkers("left");
   renderSummaries();
   renderReport();
+  renderMarkers("right");
+  renderMarkers("left");
 }
 
 function optionsHtml(list, valueMode = false, includeOther = false) {
