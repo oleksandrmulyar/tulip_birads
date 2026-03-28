@@ -263,15 +263,23 @@ function initReportControls() {
   const saveJpegBtn = document.getElementById("save-jpeg");
   if (saveJpegBtn) {
     saveJpegBtn.addEventListener("click", async () => {
+      let previewWindow = null;
       try {
-        await downloadMapsAsJpeg();
+        previewWindow = window.open("", "_blank");
+      } catch {
+        previewWindow = null;
+      }
+
+      try {
+        await downloadMapsAsJpeg(previewWindow);
       } catch (error) {
         console.error(error);
         alert("Не вдалося зберегти JPEG автоматично. Відкрию зображення в новій вкладці для ручного збереження.");
         try {
-          await openMapsPreviewInNewTab();
+          await openMapsPreviewInNewTab(previewWindow);
         } catch (previewError) {
           console.error(previewError);
+          if (previewWindow && !previewWindow.closed) previewWindow.close();
           alert("Не вдалося підготувати зображення. Спробуйте ще раз.");
         }
       }
@@ -743,33 +751,52 @@ function clamp(v, min, max) {
 }
 
 
-async function downloadMapsAsJpeg() {
+async function downloadMapsAsJpeg(previewWindow = null) {
   const { canvas, timestamp } = await renderMapsCanvas();
   const filename = `birads-maps-${timestamp}.jpeg`;
   const blob = await canvasToBlob(canvas, "image/jpeg", 0.95);
 
   if (typeof window.showSaveFilePicker === "function") {
-    const handle = await window.showSaveFilePicker({
-      suggestedName: filename,
-      types: [{ description: "JPEG image", accept: { "image/jpeg": [".jpg", ".jpeg"] } }],
-    });
-    const writable = await handle.createWritable();
-    await writable.write(blob);
-    await writable.close();
+    try {
+      const handle = await window.showSaveFilePicker({
+        suggestedName: filename,
+        types: [{ description: "JPEG image", accept: { "image/jpeg": [".jpg", ".jpeg"] } }],
+      });
+      const writable = await handle.createWritable();
+      await writable.write(blob);
+      await writable.close();
+      if (previewWindow && !previewWindow.closed) previewWindow.close();
+      return;
+    } catch (error) {
+      if (error?.name === "AbortError") {
+        if (previewWindow && !previewWindow.closed) previewWindow.close();
+        return;
+      }
+      console.warn("showSaveFilePicker failed, fallback to download link", error);
+    }
+  }
+
+  const downloadStarted = downloadBlob(blob, filename);
+  if (downloadStarted) {
+    if (previewWindow && !previewWindow.closed) previewWindow.close();
     return;
   }
 
-  downloadBlob(blob, filename);
+  await openMapsPreviewInNewTab(previewWindow, canvas);
 }
 
-async function openMapsPreviewInNewTab() {
-  const { canvas } = await renderMapsCanvas();
+async function openMapsPreviewInNewTab(previewWindow = null, readyCanvas = null) {
+  const canvas = readyCanvas || (await renderMapsCanvas()).canvas;
   const dataUrl = canvas.toDataURL("image/jpeg", 0.95);
-  const preview = window.open("", "_blank");
+  const preview = previewWindow && !previewWindow.closed ? previewWindow : window.open("", "_blank");
   if (!preview) throw new Error("Preview window blocked");
-  preview.document.write(`<img src="${dataUrl}" alt="BI-RADS maps JPEG preview" style="max-width:100%;height:auto;" />`);
+
   preview.document.title = "BI-RADS maps preview";
-  preview.document.close();
+  preview.document.body.style.margin = "16px";
+  preview.document.body.innerHTML = `
+    <a href="${dataUrl}" download="birads-maps.jpeg" style="display:inline-block;margin-bottom:12px;font:600 14px Arial,sans-serif;color:#17517b;">⬇️ Завантажити JPEG</a>
+    <img src="${dataUrl}" alt="BI-RADS maps JPEG preview" style="display:block;max-width:100%;height:auto;border:1px solid #d8e1e8;border-radius:8px;" />
+  `;
 }
 
 async function renderMapsCanvas() {
@@ -832,15 +859,24 @@ function canvasToBlob(canvas, type, quality) {
 }
 
 function downloadBlob(blob, filename) {
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement("a");
-  link.download = filename;
-  link.href = url;
-  link.rel = "noopener";
-  document.body.appendChild(link);
-  link.click();
-  link.remove();
-  setTimeout(() => URL.revokeObjectURL(url), 1000);
+  try {
+    const link = document.createElement("a");
+    if (typeof link.download !== "string") return false;
+
+    const url = URL.createObjectURL(blob);
+    link.download = filename;
+    link.href = url;
+    link.rel = "noopener";
+    link.style.display = "none";
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+    return true;
+  } catch (error) {
+    console.warn("downloadBlob failed", error);
+    return false;
+  }
 }
 
 async function svgElementToImage(svg) {
