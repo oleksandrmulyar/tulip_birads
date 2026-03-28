@@ -536,14 +536,8 @@ function renderSummaries() {
 }
 
 function renderReport() {
-  const blocks = [
-    `<strong>Грудні залози</strong>`,
-    "",
-    ...sideBlock("right"),
-    "",
-    ...sideBlock("left"),
-  ];
-  document.getElementById("report-output").innerHTML = blocks.join("<br>");
+  const lines = ["\\*\\*\\*Грудні залози\\*\\*\\*", "", ...sideBlock("right"), "", ...sideBlock("left")];
+  document.getElementById("report-output").value = lines.join("\n");
 }
 
 function lesionText(l) {
@@ -573,16 +567,16 @@ function sideBlock(side) {
   const parenchymaText = buildParenchymaText(lesions);
 
   return [
-    `<strong>${side === "right" ? "Права" : "Ліва"} грудна залоза:</strong>`,
-    `<em>${escHtml(`Паренхіма грудних залоз: ${get("tissue-structure")}.`)}</em>`,
-    `<em>${escHtml(`Фонове контрастування (BPE): ${get("bpe")}, ${get("bpe-symmetry")}.`)}</em>`,
-    `<em>${escHtml(`Паренхіма: ${parenchymaText}${lesions.length ? ":" : "."}`)}</em>`,
+    `\\*\\*\\*${side === "right" ? "Права" : "Ліва"} грудна залоза:\\*\\*\\*`,
+    `\\*Паренхіма грудних залоз: ${get("tissue-structure")}.\\*`,
+    `\\*Фонове контрастування (BPE): ${get("bpe")}, ${get("bpe-symmetry")}.\\*`,
+    `\\*Паренхіма: ${parenchymaText}${lesions.length ? ":" : "."}\\*`,
     ...lesionLines,
-    `<em>${escHtml(`Протоки: ${get("ducts")}.`)}</em>`,
-    `<em>${escHtml(`Шкіра і підшкірна клітковина: ${get("skin")}.`)}</em>`,
-    `<em>${escHtml(`Пахвові лімфатичні вузли: розміром ${nodeSizeNormalized}; NODE-RADS ${get("node-rads")}${nodeCountText}.`)}</em>`,
-    `<em>${escHtml(`Грудні м'язи: ${get("muscles")}.`)}</em>`,
-    `<em>${escHtml(`Сумарний висновок для залози: ${summary.label}.`)}</em>`,
+    `\\*Протоки: ${get("ducts")}.\\*`,
+    `\\*Шкіра і підшкірна клітковина: ${get("skin")}.\\*`,
+    `\\*Пахвові лімфатичні вузли: розміром ${nodeSizeNormalized}; NODE-RADS ${get("node-rads")}${nodeCountText}.\\*`,
+    `\\*Грудні м'язи: ${get("muscles")}.\\*`,
+    `\\*Сумарний висновок для залози: ${summary.label}.\\*`,
   ];
 }
 
