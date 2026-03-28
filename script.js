@@ -778,14 +778,17 @@ async function downloadMapsAsJpeg(previewWindow = null) {
 
   const downloadStarted = downloadBlob(blob, filename);
   if (downloadStarted) {
-    if (previewWindow && !previewWindow.closed) previewWindow.close();
+    // Some browsers (especially mobile Safari) may silently ignore programmatic
+    // downloads even when `link.click()` succeeds. Keep a visible fallback tab
+    // so users can always save the JPEG manually.
+    await openMapsPreviewInNewTab(previewWindow, canvas, filename);
     return;
   }
 
-  await openMapsPreviewInNewTab(previewWindow, canvas);
+  await openMapsPreviewInNewTab(previewWindow, canvas, filename);
 }
 
-async function openMapsPreviewInNewTab(previewWindow = null, readyCanvas = null) {
+async function openMapsPreviewInNewTab(previewWindow = null, readyCanvas = null, filename = "birads-maps.jpeg") {
   const canvas = readyCanvas || (await renderMapsCanvas()).canvas;
   const dataUrl = canvas.toDataURL("image/jpeg", 0.95);
   const preview = previewWindow && !previewWindow.closed ? previewWindow : window.open("", "_blank");
@@ -794,7 +797,8 @@ async function openMapsPreviewInNewTab(previewWindow = null, readyCanvas = null)
   preview.document.title = "BI-RADS maps preview";
   preview.document.body.style.margin = "16px";
   preview.document.body.innerHTML = `
-    <a href="${dataUrl}" download="birads-maps.jpeg" style="display:inline-block;margin-bottom:12px;font:600 14px Arial,sans-serif;color:#17517b;">⬇️ Завантажити JPEG</a>
+    <p style="margin:0 0 10px;font:500 13px Arial,sans-serif;color:#355f7f;">Якщо файл не завантажився автоматично, натисніть кнопку нижче і збережіть зображення вручну.</p>
+    <a href="${dataUrl}" download="${filename}" style="display:inline-block;margin-bottom:12px;font:600 14px Arial,sans-serif;color:#17517b;">⬇️ Завантажити JPEG</a>
     <img src="${dataUrl}" alt="BI-RADS maps JPEG preview" style="display:block;max-width:100%;height:auto;border:1px solid #d8e1e8;border-radius:8px;" />
   `;
 }
