@@ -567,7 +567,7 @@ function sideBlock(side) {
   const parenchymaText = buildParenchymaText(lesions);
 
   return [
-    `${side === "right" ? "права" : "ліва"} грудна залоза:`,
+    `${side === "right" ? "Права" : "Ліва"} грудна залоза:`,
     `Паренхіма грудних залоз: ${get("tissue-structure")}.`,
     `Фонове контрастування (BPE): ${get("bpe")}, ${get("bpe-symmetry")}.`,
     `Паренхіма: ${parenchymaText}${lesions.length ? ":" : "."}`,
