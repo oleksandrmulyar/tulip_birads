@@ -551,7 +551,8 @@ function lesionText(l) {
     morph = l.kind;
   }
 
-  return `- #${l.id}: ${morph}; розміри ${l.sizeX}×${l.sizeY} мм; BI-RADS утвору: ${biradsLabel(l.birads)}; локалізація ${l.clock} год, ${l.nippleDist} мм від соска, глибина ${l.depth} мм; динаміка: initial ${l.initial}, delayed ${l.delayed}; DWI: ${l.dwi}.`;
+  const lesionName = (l.name || "утвір").replace(/^\+$/, "утвір");
+  return `№${l.id} ${lesionName}: ${morph}; розміри ${l.sizeX}×${l.sizeY} мм; ${biradsLabel(l.birads)}; локалізація ${l.clock} год, ${l.nippleDist} мм від соска, глибина ${l.depth} мм; динаміка: initial ${l.initial}, delayed ${l.delayed}; DWI: ${l.dwi}.`;
 }
 
 function sideBlock(side) {
@@ -571,7 +572,7 @@ function sideBlock(side) {
     `Паренхіма грудних залоз: ${get("tissue-structure")}.`,
     `Фонове контрастування (BPE): ${get("bpe")}, ${get("bpe-symmetry")}.`,
     `Паренхіма: ${parenchymaText}${lesions.length ? ":" : "."}`,
-    ...(lesions.length ? ["", ...lesionLines] : lesionLines),
+    ...lesionLines,
     `Протоки: ${get("ducts")}.`,
     `Шкіра і підшкірна клітковина: ${get("skin")}.`,
     `Пахвові лімфатичні вузли розміром ${nodeSizeNormalized}; NODE-RADS ${get("node-rads")}${nodeCountText}.`,
