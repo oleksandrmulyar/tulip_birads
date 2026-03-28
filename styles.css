@@ -106,6 +106,15 @@ h3 {
   text-align: center;
 }
 
+.report-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+button.secondary {
+  background: #355f7f;
+}
+
 .report-panel {
   background: var(--panel);
   border: 1px solid var(--line);
