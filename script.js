@@ -226,7 +226,7 @@ function addCustomTemplateLesion() {
   if (!SIDES.includes(side)) return;
 
   addLesion(side, {
-    name: "Нестандартний шаблон",
+    name: "+",
     kind: "mass",
     birads: "3",
     massShape: OPTIONS.massShape[0],
