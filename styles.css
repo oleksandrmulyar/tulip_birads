@@ -60,7 +60,7 @@ h3 {
 .nodes-fieldset {
   grid-column: span 2;
   display: grid;
-  grid-template-columns: minmax(0, 2fr) minmax(120px, 1fr) minmax(120px, 1fr);
+  grid-template-columns: minmax(0, 1.8fr) minmax(100px, 1fr) minmax(100px, 1fr);
   gap: 0.6rem;
   align-items: end;
 }
@@ -262,12 +262,6 @@ textarea {
   display: flex;
   flex-direction: column;
   gap: 0.3rem;
-}
-
-@media (max-width: 760px) {
-  .nodes-fieldset {
-    grid-template-columns: 1fr;
-  }
 }
 
 .report-panel {
