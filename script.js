@@ -847,12 +847,21 @@ async function svgElementToImage(svg) {
   if (!svg) throw new Error("SVG element not found");
   const clonedSvg = svg.cloneNode(true);
   const bbox = getSvgSize(svg);
+  clonedSvg.setAttribute("xmlns", "http://www.w3.org/2000/svg");
+  clonedSvg.setAttribute("xmlns:xlink", "http://www.w3.org/1999/xlink");
   clonedSvg.setAttribute("width", bbox.width);
   clonedSvg.setAttribute("height", bbox.height);
+
   const serialized = new XMLSerializer().serializeToString(clonedSvg);
-  const encoded = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(serialized)}`;
-  const image = await loadImage(encoded);
-  return { image, width: bbox.width, height: bbox.height };
+  const blob = new Blob([serialized], { type: "image/svg+xml;charset=utf-8" });
+  const blobUrl = URL.createObjectURL(blob);
+
+  try {
+    const image = await loadImage(blobUrl);
+    return { image, width: bbox.width, height: bbox.height };
+  } finally {
+    URL.revokeObjectURL(blobUrl);
+  }
 }
 
 function getSvgSize(svg) {
