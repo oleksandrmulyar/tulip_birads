@@ -305,10 +305,10 @@ function updateLesion(side, id, field, value) {
 function renderAll() {
   renderLesionList("right");
   renderLesionList("left");
-  renderMarkers("right");
-  renderMarkers("left");
   renderSummaries();
   renderReport();
+  renderMarkers("right");
+  renderMarkers("left");
 }
 
 function optionsHtml(list, valueMode = false, includeOther = false) {
@@ -404,7 +404,9 @@ function renderLesionList(side) {
     for (const control of card.querySelectorAll("select,input[data-field]")) {
       const field = control.dataset.field;
       control.value = lesion[field];
-      control.addEventListener("input", () => updateLesion(side, lesion.id, field, parseValue(field, control.value)));
+      const syncLesionField = () => updateLesion(side, lesion.id, field, parseValue(field, control.value));
+      control.addEventListener("input", syncLesionField);
+      control.addEventListener("change", syncLesionField);
     }
 
     const customSelectFields = ["kind", "massShape", "massMargin", "massInternal", "nmeDistribution", "nmeInternal", "initial", "delayed", "dwi"];
