@@ -330,6 +330,7 @@ function renderLesionList(side) {
   }
 
   for (const lesion of lesions) {
+    const nippleDistMax = getNippleDistanceLimit(side);
     const card = document.createElement("div");
     card.className = "lesion-card";
     card.innerHTML = `
@@ -381,7 +382,7 @@ function renderLesionList(side) {
           <input data-field="clock" type="number" min="1" max="12" value="${lesion.clock}" />
         </label>
         <label>Відстань від соска (мм)
-          <input data-field="nippleDist" type="number" min="0" max="120" value="${lesion.nippleDist}" />
+          <input data-field="nippleDist" type="number" min="0" max="${Math.round(nippleDistMax)}" value="${lesion.nippleDist}" />
         </label>
         <label>Глибина в товщі (мм)
           <input data-field="depth" type="number" min="0" max="60" value="${lesion.depth}" />
@@ -484,8 +485,7 @@ function renderMarkers(side) {
 }
 
 function coronalPoint(side, clock, distMm) {
-  const dims = getBreastDims(side);
-  const maxCoronalDist = Math.max(1, avg(dims.tr, dims.cc));
+  const maxCoronalDist = getNippleDistanceLimit(side);
   const dist = (clamp(distMm, 0, maxCoronalDist) / maxCoronalDist) * (OUTER_R - 6);
   const angle = clockToAngle(clock, side);
   return polarToCartesian(CENTER, CENTER, dist, angle);
@@ -493,11 +493,12 @@ function coronalPoint(side, clock, distMm) {
 
 function sagittalPoint(side, nippleDist, depth) {
   const dims = getBreastDims(side);
+  const maxNippleDist = getNippleDistanceLimit(side);
   const xMin = 44;
   const xMax = 146;
   const yMin = 36;
   const yMax = 228;
-  const tN = clamp(nippleDist, 0, dims.cc) / Math.max(1, dims.cc);
+  const tN = clamp(nippleDist, 0, maxNippleDist) / maxNippleDist;
   const tD = clamp(depth, 0, dims.ap) / Math.max(1, dims.ap);
   let x = xMax - tN * (xMax - xMin);
   if (side === "left") x = 220 - x;
@@ -511,6 +512,11 @@ function getBreastDims(side) {
     ap: positiveNumberFromInput(`${side}-size-ap`, DEFAULT_BREAST_DIMS.ap),
     cc: positiveNumberFromInput(`${side}-size-cc`, DEFAULT_BREAST_DIMS.cc),
   };
+}
+
+function getNippleDistanceLimit(side) {
+  const dims = getBreastDims(side);
+  return Math.max(1, dims.cc / 2);
 }
 
 function positiveNumberFromInput(id, fallback) {
