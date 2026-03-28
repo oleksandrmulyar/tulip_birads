@@ -265,8 +265,15 @@ function initReportControls() {
     saveJpegBtn.addEventListener("click", async () => {
       try {
         await downloadMapsAsJpeg();
-      } catch {
-        alert("Не вдалося зберегти JPEG. Спробуйте ще раз.");
+      } catch (error) {
+        console.error(error);
+        alert("Не вдалося зберегти JPEG автоматично. Відкрию зображення в новій вкладці для ручного збереження.");
+        try {
+          await openMapsPreviewInNewTab();
+        } catch (previewError) {
+          console.error(previewError);
+          alert("Не вдалося підготувати зображення. Спробуйте ще раз.");
+        }
       }
     });
   }
@@ -737,6 +744,35 @@ function clamp(v, min, max) {
 
 
 async function downloadMapsAsJpeg() {
+  const { canvas, timestamp } = await renderMapsCanvas();
+  const filename = `birads-maps-${timestamp}.jpeg`;
+  const blob = await canvasToBlob(canvas, "image/jpeg", 0.95);
+
+  if (typeof window.showSaveFilePicker === "function") {
+    const handle = await window.showSaveFilePicker({
+      suggestedName: filename,
+      types: [{ description: "JPEG image", accept: { "image/jpeg": [".jpg", ".jpeg"] } }],
+    });
+    const writable = await handle.createWritable();
+    await writable.write(blob);
+    await writable.close();
+    return;
+  }
+
+  downloadBlob(blob, filename);
+}
+
+async function openMapsPreviewInNewTab() {
+  const { canvas } = await renderMapsCanvas();
+  const dataUrl = canvas.toDataURL("image/jpeg", 0.95);
+  const preview = window.open("", "_blank");
+  if (!preview) throw new Error("Preview window blocked");
+  preview.document.write(`<img src="${dataUrl}" alt="BI-RADS maps JPEG preview" style="max-width:100%;height:auto;" />`);
+  preview.document.title = "BI-RADS maps preview";
+  preview.document.close();
+}
+
+async function renderMapsCanvas() {
   const mapRows = [
     { label: "Right breast — coronal", id: "map-right" },
     { label: "Right breast — sagittal", id: "sag-right" },
@@ -764,6 +800,7 @@ async function downloadMapsAsJpeg() {
   canvas.height = Math.round(padding * 2 + rows * (cellHeight + captionHeight) + gap * (rows - 1));
 
   const ctx = canvas.getContext("2d");
+  if (!ctx) throw new Error("Canvas context is unavailable");
   ctx.fillStyle = "#ffffff";
   ctx.fillRect(0, 0, canvas.width, canvas.height);
   ctx.fillStyle = "#15334c";
@@ -779,10 +816,31 @@ async function downloadMapsAsJpeg() {
   });
 
   const timestamp = new Date().toISOString().slice(0, 19).replaceAll(":", "-");
+  return { canvas, timestamp };
+}
+
+function canvasToBlob(canvas, type, quality) {
+  return new Promise((resolve, reject) => {
+    canvas.toBlob((blob) => {
+      if (blob) {
+        resolve(blob);
+      } else {
+        reject(new Error("Unable to generate JPEG blob"));
+      }
+    }, type, quality);
+  });
+}
+
+function downloadBlob(blob, filename) {
+  const url = URL.createObjectURL(blob);
   const link = document.createElement("a");
-  link.download = `birads-maps-${timestamp}.jpeg`;
-  link.href = canvas.toDataURL("image/jpeg", 0.95);
+  link.download = filename;
+  link.href = url;
+  link.rel = "noopener";
+  document.body.appendChild(link);
   link.click();
+  link.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
 
 async function svgElementToImage(svg) {
