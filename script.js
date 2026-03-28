@@ -359,7 +359,7 @@ function renderLesionList(side) {
           <select data-field="massMargin">${optionsHtml(OPTIONS.massMargin, false, true)}</select>
           <input class="custom-input" data-custom-for="massMargin" placeholder="Вкажіть власний варіант" />
         </label>
-        <label data-role="mass">Внутрішнє підсилення (mass)
+        <label data-role="mass">Внутрішнє контрастне підсилення
           <select data-field="massInternal">${optionsHtml(OPTIONS.massInternal, false, true)}</select>
           <input class="custom-input" data-custom-for="massInternal" placeholder="Вкажіть власний варіант" />
         </label>
