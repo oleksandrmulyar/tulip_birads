@@ -537,7 +537,7 @@ function renderSummaries() {
 }
 
 function renderReport() {
-  const lines = ["### MRI молочних залоз (BI-RADS)", "", ...sideBlock("right"), "", ...sideBlock("left")];
+  const lines = [...sideBlock("right"), "", ...sideBlock("left")];
   document.getElementById("report-output").value = lines.join("\n");
 }
 
@@ -567,7 +567,7 @@ function sideBlock(side) {
   const parenchymaText = buildParenchymaText(lesions);
 
   return [
-    `${SIDE_LABEL[side]} breast:`,
+    `${side === "right" ? "права" : "ліва"} грудна залоза:`,
     `Паренхіма грудних залоз: ${get("tissue-structure")}.`,
     `Фонове контрастування (BPE): ${get("bpe")}, ${get("bpe-symmetry")}.`,
     `Паренхіма: ${parenchymaText}${lesions.length ? ":" : "."}`,
