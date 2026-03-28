@@ -60,15 +60,31 @@ h3 {
 .nodes-fieldset {
   grid-column: span 2;
   display: grid;
-  grid-template-columns: minmax(0, 1.8fr) minmax(100px, 1fr) minmax(100px, 1fr);
-  gap: 0.6rem;
-  align-items: end;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.65rem 0.8rem;
+  align-items: start;
+  padding: 0.8rem;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: #f8fbfe;
+}
+
+.nodes-title {
+  grid-column: 1 / -1;
+  margin: 0;
+  font-size: 0.92rem;
+  font-weight: 600;
+  color: #1c4a6d;
 }
 
 .nodes-item {
   display: flex;
   flex-direction: column;
   gap: 0.3rem;
+}
+
+.nodes-item-wide {
+  grid-column: 1 / -1;
 }
 
 .nodes-item-compact input,
@@ -289,6 +305,10 @@ textarea {
   .maps-grid,
   .template-grid,
   .lesion-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .nodes-fieldset {
     grid-template-columns: 1fr;
   }
 }
