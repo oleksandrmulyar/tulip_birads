@@ -586,9 +586,9 @@ function sideBlock(side) {
   const lesionLines = lesions.length ? lesions.map(lesionText) : [escHtml("- патологічних солідних вогнищ не виявлено.")];
   const summary = getSideSummary(side);
   const nodeSizeRaw = document.getElementById(`${side}-nodes-size`).value.trim();
-  const nodeSize = nodeSizeRaw || "не вказано";
+  const nodeSize = normalizeNodeSize(nodeSizeRaw);
   const nodeCount = Math.max(0, Number(document.getElementById(`${side}-nodes-count`).value) || 0);
-  const nodeSizeNormalized = nodeSize === "не вказано" ? nodeSize : (/^до\s+/i.test(nodeSize) ? nodeSize : `до ${nodeSize}`);
+  const nodeSizeNormalized = /^до\s+/i.test(nodeSize) ? nodeSize : `до ${nodeSize}`;
   const nodeCountText = nodeCount > 0 ? `; кількість - ${nodeCount}` : "";
   const parenchymaText = buildParenchymaText(lesions);
 
@@ -604,6 +604,14 @@ function sideBlock(side) {
     `Грудні м'язи: ${get("muscles")}.`,
     `Сумарний висновок для залози: ${summary.label}.`,
   ];
+}
+
+function normalizeNodeSize(value) {
+  const raw = String(value || "").trim();
+  if (!raw) return "0 мм";
+  if (/\bмм\b/i.test(raw)) return raw;
+  if (/^\d+([.,]\d+)?$/.test(raw)) return `${raw} мм`;
+  return raw;
 }
 
 function escHtml(value) {
