@@ -531,8 +531,7 @@ function getSideSummary(side) {
 function renderSummaries() {
   for (const side of SIDES) {
     const s = getSideSummary(side);
-    const suffix = s.lesionId ? ` (визначає утвір #${s.lesionId})` : "";
-    document.getElementById(`${side}-summary`).textContent = `${s.label}${suffix}`;
+    document.getElementById(`${side}-summary`).textContent = s.label;
   }
 }
 
@@ -568,16 +567,16 @@ function sideBlock(side) {
   const parenchymaText = buildParenchymaText(lesions);
 
   return [
-    `${side === "right" ? "Права" : "Ліва"} грудна залоза:`,
-    `Паренхіма грудних залоз: ${get("tissue-structure")}.`,
-    `Фонове контрастування (BPE): ${get("bpe")}, ${get("bpe-symmetry")}.`,
-    `Паренхіма: ${parenchymaText}${lesions.length ? ":" : "."}`,
+    `***${side === "right" ? "Права" : "Ліва"} грудна залоза:***`,
+    `*Паренхіма грудних залоз:* ${get("tissue-structure")}.`,
+    `*Фонове контрастування (BPE):* ${get("bpe")}, ${get("bpe-symmetry")}.`,
+    `*Паренхіма:* ${parenchymaText}${lesions.length ? ":" : "."}`,
     ...lesionLines,
-    `Протоки: ${get("ducts")}.`,
-    `Шкіра і підшкірна клітковина: ${get("skin")}.`,
-    `Пахвові лімфатичні вузли розміром ${nodeSizeNormalized}; NODE-RADS ${get("node-rads")}${nodeCountText}.`,
-    `Грудні м'язи: ${get("muscles")}.`,
-    `Сумарний висновок для залози: ${summary.label}${summary.lesionId ? ` (відповідає утвору #${summary.lesionId})` : ""}.`,
+    `*Протоки:* ${get("ducts")}.`,
+    `*Шкіра і підшкірна клітковина:* ${get("skin")}.`,
+    `*Пахвові лімфатичні вузли:* розміром ${nodeSizeNormalized}; NODE-RADS ${get("node-rads")}${nodeCountText}.`,
+    `*Грудні м'язи:* ${get("muscles")}.`,
+    `*Сумарний висновок для залози:* ${summary.label}.`,
   ];
 }
 
