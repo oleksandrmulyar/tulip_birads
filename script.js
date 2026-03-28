@@ -585,9 +585,9 @@ function sideBlock(side) {
   const lesions = sideState[side].lesions;
   const lesionLines = lesions.length ? lesions.map(lesionText) : [escHtml("- патологічних солідних вогнищ не виявлено.")];
   const summary = getSideSummary(side);
-  const nodeSizeRaw = document.getElementById(`${side}-nodes-size`).value.trim();
+  const nodeSizeRaw = getInputTrimmedValue(`${side}-nodes-size`);
   const nodeSize = normalizeNodeSize(nodeSizeRaw);
-  const nodeCount = Math.max(0, Number(document.getElementById(`${side}-nodes-count`).value) || 0);
+  const nodeCount = Math.max(0, Number(getInputTrimmedValue(`${side}-nodes-count`)) || 0);
   const nodeSizeNormalized = /^до\s+/i.test(nodeSize) ? nodeSize : `до ${nodeSize}`;
   const nodeCountText = nodeCount > 0 ? `; кількість - ${nodeCount}` : "";
   const parenchymaText = buildParenchymaText(lesions);
@@ -612,6 +612,10 @@ function normalizeNodeSize(value) {
   if (/\bмм\b/i.test(raw)) return raw;
   if (/^\d+([.,]\d+)?$/.test(raw)) return `${raw} мм`;
   return raw;
+}
+
+function getInputTrimmedValue(id) {
+  return String(document.getElementById(id)?.value ?? "").trim();
 }
 
 function escHtml(value) {
